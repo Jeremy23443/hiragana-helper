@@ -1,0 +1,1778 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="description" content="給華人的平假名學習小工具：字源漢字記憶法、易混字比較、促音拗音特訓、附中英文意思的簡單單字。">
+<meta name="theme-color" content="#f3f4ef">
+<meta name="apple-mobile-web-app-title" content="平假名小助手">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect x='2' y='2' width='60' height='60' rx='6' fill='white' stroke='%23c2402b' stroke-width='3'/%3E%3Ctext x='32' y='46' font-size='40' text-anchor='middle' fill='%23c2402b'%3E%E3%81%B2%3C/text%3E%3C/svg%3E">
+<style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}</style>
+<title>平假名小助手</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Klee+One:wght@400;600&family=Noto+Serif+TC:wght@600&family=Zen+Kaku+Gothic+New:wght@500&display=swap">
+<style>
+/* Layout: a 習字 practice sheet. Kana sit in grid squares with dashed cross guides;
+   answers get red-ink ○ / × marks like a teacher's correction pen. Indigo drives the controls. */
+:root{
+  --paper:#f3f4ef; --sheet:#ffffff; --ink:#1c2130; --ink-2:#596071; --ink-3:#848a99;
+  --rule:#dcdfd5; --guide:#d6dce9; --scrim:rgba(16,20,30,.48);
+  --ai:#2c4c8c; --ai-soft:#e4eaf6; --on-ai:#ffffff;
+  --shu:#c2402b; --shu-soft:#f9e5df;
+  --take:#2b7650; --take-soft:#dfefe5;
+  --kin:#a3740f; --kin-soft:#f4ead2;
+  --f-kana:"Klee One","Hiragino Mincho ProN","Yu Mincho",serif;
+  --f-print:"Zen Kaku Gothic New","Hiragino Sans","Yu Gothic",sans-serif;
+  --f-han:"Noto Serif TC","Songti TC","PMingLiU",serif;
+  --f-ui:-apple-system,BlinkMacSystemFont,"PingFang TC","Noto Sans TC","Microsoft JhengHei",sans-serif;
+  --f-mono:"DM Mono",ui-monospace,"SF Mono",Menlo,monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --paper:#13161c; --sheet:#1b1f27; --ink:#e7e9ee; --ink-2:#a2a8b6; --ink-3:#757c8c;
+    --rule:#2b303b; --guide:#323a4b; --scrim:rgba(0,0,0,.62);
+    --ai:#91acea; --ai-soft:#202a3f; --on-ai:#0f1420;
+    --shu:#f0806a; --shu-soft:#3a221d;
+    --take:#6cc391; --take-soft:#1a3125;
+    --kin:#e2b555; --kin-soft:#362c18;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#13161c; --sheet:#1b1f27; --ink:#e7e9ee; --ink-2:#a2a8b6; --ink-3:#757c8c;
+  --rule:#2b303b; --guide:#323a4b; --scrim:rgba(0,0,0,.62);
+  --ai:#91acea; --ai-soft:#202a3f; --on-ai:#0f1420;
+  --shu:#f0806a; --shu-soft:#3a221d;
+  --take:#6cc391; --take-soft:#1a3125;
+  --kin:#e2b555; --kin-soft:#362c18;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{background:var(--paper);color:var(--ink);font-family:var(--f-ui);font-size:15px;line-height:1.65}
+.wrap{max-width:1000px;margin:0 auto;padding-inline:16px;padding-block:20px 72px}
+h1,h2,h3{text-wrap:balance;line-height:1.3;margin:0}
+h2{font-size:1.25rem;font-weight:700}
+p{margin:0}
+ul,ol{margin:0}
+a{color:var(--ai)}
+button{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--ai);outline-offset:2px}
+.kana{font-family:var(--f-kana);font-weight:600}
+.romaji{font-family:var(--f-mono)}
+.han{font-family:var(--f-han);font-weight:600}
+.label{font-size:.78rem;font-weight:700;letter-spacing:.12em;color:var(--ink-2)}
+.muted{color:var(--ink-2)}
+
+/* grid square with dashed 十字 guide lines */
+.sq{position:relative;background:var(--sheet);border:1px solid var(--rule);border-radius:6px}
+.sq::before,.sq::after{content:"";position:absolute;pointer-events:none}
+.sq::before{left:50%;top:9%;bottom:9%;border-left:1px dashed var(--guide)}
+.sq::after{top:50%;left:9%;right:9%;border-top:1px dashed var(--guide)}
+.sq > *{position:relative;z-index:1}
+
+/* header */
+.top{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,350px);gap:18px 32px;align-items:end;padding-bottom:18px}
+@media (max-width:760px){.top{grid-template-columns:minmax(0,1fr)}}
+.brand{display:flex;gap:14px;align-items:center;min-width:0}
+.brand > div:not(.mark){flex:1;min-width:0}
+.mark{flex:none;width:66px;height:66px;display:grid;place-items:center;border:1.5px solid var(--shu);border-radius:4px}
+.mark span{font-family:var(--f-kana);font-size:46px;font-weight:600;line-height:1;color:var(--shu)}
+h1{font-size:clamp(1.55rem,4.2vw,2.05rem);font-weight:800;letter-spacing:.03em}
+.tagline{color:var(--ink-2);font-size:.92rem;margin-top:2px;max-width:40ch}
+.meter{background:var(--sheet);border:1px solid var(--rule);border-radius:14px;padding:14px 16px;display:grid;gap:9px;min-width:0}
+.meter-head{display:flex;justify-content:space-between;align-items:baseline;gap:8px;font-size:.86rem;color:var(--ink-2)}
+.meter-head .num{font-family:var(--f-mono);font-variant-numeric:tabular-nums;color:var(--ink)}
+.meter-head .num b{font-size:1.45rem;font-weight:500}
+.bar{display:flex;height:8px;border-radius:99px;background:var(--rule);overflow:hidden}
+.bar i{display:block;height:100%;transition:width .3s}
+#b-ok{background:var(--take)} #b-mid{background:var(--kin)} #b-weak{background:var(--shu)}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:.78rem;color:var(--ink-2);font-variant-numeric:tabular-nums}
+.lg::before{content:"";display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:5px;vertical-align:1px}
+.lg.ok::before{background:var(--take)} .lg.mid::before{background:var(--kin)} .lg.weak::before{background:var(--shu)}
+.meter-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap;font-size:.86rem}
+.meter-actions .btn-sm{margin-left:auto}
+select{font:inherit;color:var(--ink);background:var(--paper);border:1px solid var(--rule);border-radius:8px;padding:4px 8px}
+.sync{font-size:.75rem;color:var(--ink-3)}
+
+/* tabs */
+.tabs{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:var(--paper);display:flex;gap:2px;border-bottom:1px solid var(--rule);margin-bottom:22px;overflow-x:auto;scrollbar-width:none}
+.tabs::-webkit-scrollbar{display:none}
+.tabs button{flex:none;background:none;border:0;padding:12px 14px 9px;font-weight:600;color:var(--ink-2);border-bottom:3px solid transparent;cursor:pointer;white-space:nowrap}
+.tabs button:hover{color:var(--ink)}
+.tabs button[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--shu)}
+.panel{display:grid;gap:22px}
+.panel-head{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:end}
+.panel-head p{color:var(--ink-2);max-width:62ch}
+
+/* controls */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;border:1px solid var(--rule);background:var(--sheet);border-radius:10px;padding:9px 16px;font-weight:600;cursor:pointer}
+.btn:hover{border-color:var(--ai)}
+.btn.primary{background:var(--ai);border-color:var(--ai);color:var(--on-ai)}
+.btn-sm{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--rule);background:var(--sheet);border-radius:8px;padding:5px 10px;font-size:.85rem;font-weight:600;cursor:pointer;color:var(--ai)}
+.btn-sm:hover{border-color:var(--ai)}
+.btn-sm svg{width:16px;height:16px}
+.icon-btn{flex:none;width:36px;height:36px;display:grid;place-items:center;border-radius:50%;border:1px solid var(--rule);background:var(--sheet);cursor:pointer;color:var(--ai)}
+.icon-btn:hover{border-color:var(--ai)}
+.icon-btn svg{width:18px;height:18px}
+.seg{display:inline-flex;flex-wrap:wrap;background:var(--sheet);border:1px solid var(--rule);border-radius:10px;padding:3px;gap:2px}
+.seg button{border:0;background:none;padding:6px 12px;border-radius:7px;cursor:pointer;font-weight:600;color:var(--ink-2)}
+.seg button[aria-pressed="true"]{background:var(--ai-soft);color:var(--ai)}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{border:1px solid var(--rule);background:var(--sheet);border-radius:99px;padding:4px 12px;cursor:pointer;font-size:.88rem}
+.chip:hover{border-color:var(--ai)}
+.chip[aria-pressed="true"]{background:var(--ai);border-color:var(--ai);color:var(--on-ai)}
+.switch{display:inline-flex;align-items:center;gap:8px;cursor:pointer;font-size:.9rem}
+input[type="checkbox"]{accent-color:var(--ai);width:17px;height:17px;margin:0}
+.toolbar{display:flex;flex-wrap:wrap;gap:10px 18px;align-items:center}
+.linkish{background:none;border:0;padding:0;color:var(--ai);cursor:pointer;font-size:.85rem;text-decoration:underline;text-underline-offset:3px}
+
+/* chart */
+.chart-layout{display:grid;grid-template-columns:minmax(0,600px) minmax(0,1fr);gap:28px;align-items:start}
+@media (max-width:860px){.chart-layout{grid-template-columns:minmax(0,1fr)}}
+.chart{display:grid;grid-template-columns:2.7rem repeat(var(--cols,5),minmax(0,1fr));gap:6px}
+.chart.yoon{max-width:400px;grid-template-columns:3rem repeat(3,minmax(0,1fr))}
+.c-head{font-family:var(--f-mono);font-size:.74rem;color:var(--ink-3);text-align:center;align-self:end}
+.c-label{font-size:.8rem;color:var(--ink-2);display:grid;place-items:center;font-weight:600;white-space:nowrap}
+.cell{aspect-ratio:1/1;width:100%;max-width:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;padding:0;transition:transform .12s,border-color .12s}
+.cell:hover{border-color:var(--ai);transform:translateY(-1px)}
+.cell .k{font-family:var(--f-kana);font-size:clamp(1.2rem,5vw,2.05rem);line-height:1;font-weight:600}
+.cell.two .k{font-size:clamp(.95rem,4vw,1.55rem)}
+.cell .ro{position:relative;font-family:var(--f-mono);font-size:.64rem;line-height:1;margin-top:3px;color:var(--ink-3)}
+.chart.no-ro .cell .ro{display:none}
+.cell .dot{position:absolute;top:5px;right:5px;width:7px;height:7px;border-radius:50%}
+.st-ok .dot{background:var(--take)} .st-mid .dot{background:var(--kin)} .st-weak .dot{background:var(--shu)} .st-new .dot{display:none}
+.cell.st-weak{border-color:var(--shu)}
+.cell.later{opacity:.38}
+.chart-note{font-size:.82rem;color:var(--ink-2);margin-top:10px;display:flex;flex-wrap:wrap;gap:4px 14px}
+.aside{display:grid;gap:16px;align-content:start}
+.aside-box{background:var(--sheet);border:1px solid var(--rule);border-radius:14px;padding:16px;display:grid;gap:10px}
+.aside-box p,.aside-box li{font-size:.92rem;color:var(--ink-2)}
+.aside-box b{color:var(--ink)}
+.steps{counter-reset:s;list-style:none;padding:0;display:grid;gap:10px}
+.steps li{counter-increment:s;display:grid;grid-template-columns:1.6rem minmax(0,1fr);gap:10px;align-items:start}
+.steps li::before{content:counter(s);font-family:var(--f-mono);font-size:.78rem;width:1.6rem;height:1.6rem;border-radius:50%;border:1px solid var(--shu);color:var(--shu);display:grid;place-items:center;margin-top:1px}
+.origin-strip{display:flex;flex-wrap:wrap;gap:6px}
+.origin-strip span{display:inline-flex;align-items:baseline;gap:3px;padding:3px 8px;border-radius:8px;background:var(--paper);font-size:1.05rem}
+.origin-strip .han{font-size:1rem}
+
+/* detail sheet */
+.overlay{position:fixed;inset:0;background:var(--scrim);display:flex;align-items:flex-end;justify-content:center;z-index:50}
+@media (min-width:640px){.overlay{align-items:center;padding:24px}}
+.sheet{background:var(--sheet);width:100%;max-width:580px;max-height:90vh;overflow:auto;border-radius:18px 18px 0 0;padding:20px 20px calc(20px + env(safe-area-inset-bottom,0px));display:grid;gap:16px}
+@media (min-width:640px){.sheet{border-radius:18px}}
+.d-head{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:16px;align-items:start}
+.d-square{width:112px;height:112px;display:grid;place-items:center;border-color:var(--shu);border-width:1.5px;border-radius:4px}
+.d-square span{font-family:var(--f-kana);font-size:76px;font-weight:600;line-height:1}
+.d-square.two span{font-size:50px}
+.d-meta{display:grid;gap:6px;min-width:0}
+.d-romaji{font-family:var(--f-mono);font-size:2rem;font-weight:500;line-height:1.1}
+.d-romaji small{display:block;font-size:.78rem;color:var(--ink-2);font-family:var(--f-ui);font-weight:400;margin-top:4px}
+.d-actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.pill{font-size:.75rem;font-weight:700;padding:2px 9px;border-radius:99px;background:var(--paper);color:var(--ink-2)}
+.pill.st-ok{background:var(--take-soft);color:var(--take)} .pill.st-mid{background:var(--kin-soft);color:var(--kin)} .pill.st-weak{background:var(--shu-soft);color:var(--shu)}
+.d-origin{display:grid;grid-template-columns:auto minmax(0,1fr);gap:16px;align-items:center;padding:14px 16px;background:var(--paper);border-radius:12px}
+.d-pair{display:flex;align-items:center;gap:8px;font-size:2.5rem;line-height:1}
+.d-pair .arrow{font-size:1.1rem;color:var(--ink-3)}
+.d-origin p{font-size:.95rem}
+.d-sec{display:grid;gap:6px}
+.d-sec p{font-size:.95rem}
+.fonts{display:flex;gap:10px;flex-wrap:wrap}
+.fonts figure{margin:0;display:grid;justify-items:center;gap:2px;padding:8px 18px;border:1px solid var(--rule);border-radius:10px}
+.fonts .hand{font-family:var(--f-kana);font-weight:600;font-size:2.5rem;line-height:1.2}
+.fonts .print{font-family:var(--f-print);font-weight:500;font-size:2.5rem;line-height:1.2}
+.fonts figcaption{font-size:.74rem;color:var(--ink-3)}
+.kchip{display:inline-flex;align-items:baseline;gap:6px;border:1px solid var(--rule);background:var(--sheet);border-radius:10px;padding:4px 12px;cursor:pointer}
+.kchip:hover{border-color:var(--ai)}
+.kchip .kana{font-size:1.5rem}
+.kchip .romaji{font-size:.8rem;color:var(--ink-2)}
+.keyline{font-size:.9rem;color:var(--ink-2)}
+.keyline b{color:var(--shu)}
+.ex{list-style:none;padding:0;display:grid}
+.ex li{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;align-items:center;padding:8px 0;border-top:1px solid var(--rule)}
+.ex .kana{font-size:1.25rem;margin-right:6px}
+.ex .meta{font-size:.85rem;color:var(--ink-2)}
+.d-nav{display:flex;justify-content:space-between;gap:8px}
+
+/* confusables */
+.groups{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,290px),1fr));gap:14px}
+.gcard{background:var(--sheet);border:1px solid var(--rule);border-radius:14px;padding:16px;display:grid;gap:12px;align-content:start}
+.g-glyphs{display:flex;gap:8px;flex-wrap:wrap}
+.g-k{width:70px;height:80px;display:grid;place-items:center;cursor:pointer;padding:0 0 12px}
+.g-k:hover{border-color:var(--ai)}
+.g-k .kana{font-size:2.3rem;line-height:1}
+.g-k .ro{position:absolute;bottom:3px;left:0;right:0;text-align:center;font-family:var(--f-mono);font-size:.72rem;color:var(--ink-3)}
+.g-key{font-weight:600;font-size:.98rem}
+.g-key b{color:var(--shu);margin-right:4px}
+.g-intro{font-size:.88rem;color:var(--ink-2)}
+.g-notes{list-style:none;padding:0;display:grid;gap:6px;font-size:.9rem;color:var(--ink-2)}
+.g-notes li{display:grid;grid-template-columns:1.8rem minmax(0,1fr);gap:6px;align-items:baseline}
+.g-notes .kana{color:var(--ink);font-size:1.25rem}
+.gcard .btn{justify-self:start}
+.traps{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,290px),1fr));gap:10px}
+.trap{border-left:3px solid var(--shu);background:var(--sheet);border-radius:0 10px 10px 0;padding:10px 14px;display:grid;gap:2px}
+.trap b{font-family:var(--f-kana);font-size:1.15rem}
+.trap span{font-size:.9rem;color:var(--ink-2)}
+
+/* practice */
+.p-grid{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);gap:24px;align-items:start}
+@media (max-width:760px){.p-grid{grid-template-columns:minmax(0,1fr)}}
+fieldset{border:0;padding:0;margin:0;min-width:0;display:grid;gap:10px}
+legend{font-weight:700;margin-bottom:8px;font-size:.95rem;padding:0}
+.modes{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,190px),1fr));gap:8px}
+.mode{display:grid;gap:2px;text-align:left;border:1.5px solid var(--rule);background:var(--sheet);border-radius:12px;padding:10px 12px;cursor:pointer}
+.mode:hover{border-color:var(--ai)}
+.mode b{font-size:.96rem}
+.mode span{font-size:.8rem;color:var(--ink-2)}
+.mode[aria-pressed="true"]{border-color:var(--ai);background:var(--ai-soft)}
+.p-side{display:grid;gap:20px;background:var(--sheet);border:1px solid var(--rule);border-radius:14px;padding:16px}
+.p-note{font-size:.88rem;color:var(--ink-2)}
+.p-note.warn{color:var(--shu)}
+.q-top{display:flex;align-items:center;gap:12px;font-family:var(--f-mono);font-size:.85rem;max-width:560px;margin:0 auto;width:100%;font-variant-numeric:tabular-nums}
+.q-bar{flex:1;height:6px;background:var(--rule);border-radius:99px;overflow:hidden}
+.q-bar i{display:block;height:100%;background:var(--ai);transition:width .25s}
+.q-card{background:var(--sheet);border:1px solid var(--rule);border-radius:16px;padding:22px 18px;display:grid;gap:18px;justify-items:center;max-width:560px;margin:0 auto;width:100%}
+.q-ask{color:var(--ink-2);font-size:.95rem}
+.q-prompt{display:grid;place-items:center;min-height:90px;text-align:center}
+.q-prompt.is-kana{width:150px;height:150px;border-color:var(--shu);border-width:1.5px;border-radius:4px}
+.q-prompt.is-kana .kana{font-size:96px;line-height:1}
+.q-prompt.is-kana.two .kana{font-size:64px}
+.q-prompt.word .kana{font-size:clamp(2rem,9vw,3.1rem);line-height:1.2}
+.q-prompt .romaji{font-size:clamp(2rem,10vw,3.2rem);font-weight:500;overflow-wrap:anywhere}
+.q-prompt .en{font-size:1.5rem;font-weight:700}
+.q-opts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;width:100%}
+.opt{position:relative;min-height:64px;border:1.5px solid var(--rule);background:var(--paper);border-radius:12px;cursor:pointer;font-size:1.3rem;padding:12px 14px;display:flex;align-items:center;justify-content:center;text-align:center;min-width:0;overflow-wrap:anywhere}
+.opt .n{position:absolute;top:5px;left:9px;font-family:var(--f-mono);font-size:.68rem;color:var(--ink-3)}
+.opt.o-kana{font-family:var(--f-kana);font-weight:600;font-size:2.2rem;line-height:1}
+.opt.o-word{font-family:var(--f-kana);font-weight:600;font-size:1.35rem}
+.opt.o-en{font-size:1rem;font-weight:600}
+.opt.o-ro{font-family:var(--f-mono);font-size:1.4rem}
+.opt:hover:not(:disabled){border-color:var(--ai)}
+.opt:disabled{cursor:default;color:var(--ink)}
+.opt.right{background:var(--take-soft);border-color:var(--take)}
+.opt.wrong{background:var(--shu-soft);border-color:var(--shu)}
+.mk{position:absolute;right:8px;top:1px;font-family:var(--f-kana);font-size:1.7rem;font-weight:600;color:var(--shu);line-height:1.3;animation:stamp .28s ease-out}
+@keyframes stamp{from{transform:scale(1.9) rotate(-12deg);opacity:0}to{transform:none;opacity:1}}
+.q-fb{width:100%;border-radius:12px;padding:12px 14px;font-size:.94rem;display:grid;gap:6px}
+.q-fb.ok{background:var(--take-soft)} .q-fb.no{background:var(--shu-soft)}
+.q-fb .head{font-weight:700}
+.q-fb.ok .head{color:var(--take)} .q-fb.no .head{color:var(--shu)}
+.q-fb .kana{font-size:1.2rem}
+#q-form{display:flex;gap:8px;width:100%}
+#q-input{flex:1;min-width:0;font-family:var(--f-mono);font-size:1.4rem;padding:10px 14px;border:1.5px solid var(--rule);border-radius:12px;background:var(--paper);color:var(--ink)}
+#q-input:focus{border-color:var(--ai);outline:none}
+.kbd-hint{text-align:center;font-size:.78rem;color:var(--ink-3)}
+.res{max-width:560px;margin:0 auto;width:100%;display:grid;gap:16px}
+.res-card{background:var(--sheet);border:1px solid var(--rule);border-radius:16px;padding:22px 18px;display:grid;gap:12px;justify-items:center;text-align:center}
+.res-score{font-family:var(--f-mono);font-size:1.2rem;font-variant-numeric:tabular-nums}
+.res-score b{font-size:3.4rem;font-weight:500}
+.res-list{list-style:none;padding:0;display:grid;gap:8px}
+.res-list li{background:var(--sheet);border:1px solid var(--rule);border-radius:12px;padding:10px 14px;display:grid;grid-template-columns:auto minmax(0,1fr);gap:12px;align-items:center}
+.res-list .kana{font-size:1.9rem;line-height:1}
+.res-list p{font-size:.88rem;color:var(--ink-2)}
+.res-list p b{color:var(--ink)}
+.row-btns{display:flex;flex-wrap:wrap;gap:8px;justify-content:center}
+
+/* vocab */
+.vlist{display:grid;border-top:1px solid var(--rule)}
+.vrow{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1.6fr) auto;gap:12px;align-items:center;padding:10px 4px;border-bottom:1px solid var(--rule)}
+.v-jp{min-width:0}
+.v-jp .kana{font-size:1.45rem;margin-right:8px}
+.v-jp .kanji{font-family:var(--f-print);color:var(--ink-3);font-size:.88rem}
+.v-jp .ro{display:block;font-family:var(--f-mono);font-size:.82rem;color:var(--ink-2)}
+.v-mean{display:grid;min-width:0;text-align:left;background:none;border:0;padding:0;position:relative;color:inherit}
+.v-mean .zh{font-weight:600}
+.v-mean .en{color:var(--ink-2);font-size:.9rem}
+button.v-mean{cursor:pointer;min-height:44px}
+.vlist.cover .vrow:not(.open) .v-mean .zh,.vlist.cover .vrow:not(.open) .v-mean .en{visibility:hidden}
+.vlist.cover .vrow:not(.open) .v-mean::after{content:"點一下看意思";position:absolute;inset:4px 0;display:flex;align-items:center;color:var(--ai);font-size:.85rem;border:1px dashed var(--guide);border-radius:8px;padding-left:12px}
+.v-count{font-size:.85rem;color:var(--ink-2)}
+#v-search{font:inherit;color:var(--ink);background:var(--sheet);border:1px solid var(--rule);border-radius:10px;padding:7px 12px;min-width:0;width:min(100%,320px)}
+@media (max-width:560px){
+  .vrow{grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"jp spk" "mean mean";gap:4px 12px}
+  .v-jp{grid-area:jp} .v-mean{grid-area:mean} .vrow .icon-btn{grid-area:spk}
+}
+
+/* tips */
+.tips-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,280px),1fr));gap:14px}
+.tip{background:var(--sheet);border:1px solid var(--rule);border-radius:14px;padding:16px;display:grid;gap:8px;align-content:start}
+.tip h3{font-size:1.02rem}
+.tip p{font-size:.92rem;color:var(--ink-2)}
+.tip .ex-line{font-size:.92rem;color:var(--ink)}
+.two-col{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,340px),1fr));gap:24px;align-items:start}
+.block{display:grid;gap:12px}
+.block > p{color:var(--ink-2);max-width:65ch}
+.plain{padding-left:1.2rem;display:grid;gap:8px;font-size:.93rem}
+.plain li::marker{color:var(--shu)}
+.tbl-wrap{overflow-x:auto;border:1px solid var(--rule);border-radius:12px;background:var(--sheet)}
+table{border-collapse:collapse;width:100%;min-width:520px;font-size:.9rem}
+th,td{text-align:left;padding:8px 12px;border-bottom:1px solid var(--rule);vertical-align:top}
+tr:last-child td{border-bottom:0}
+th{font-size:.76rem;color:var(--ink-2);letter-spacing:.08em}
+td:first-child{font-weight:600}
+td .kana{font-size:1.05rem}
+.sources{padding-left:1.2rem;display:grid;gap:6px;font-size:.88rem;color:var(--ink-2)}
+.danger{color:var(--shu);border-color:var(--shu)}
+
+/* 發音設定 */
+#voice-settings{scroll-margin-top:64px}
+.settings{display:grid;gap:12px;background:var(--sheet);border:1px solid var(--rule);border-radius:14px;padding:16px;max-width:640px}
+.set-row{display:grid;grid-template-columns:8rem minmax(0,1fr) 3rem;gap:10px;align-items:center}
+.set-row label{font-weight:600;font-size:.92rem}
+.set-row.key input{grid-column:2/-1}
+#tts-rate{width:100%;accent-color:var(--ai)}
+#tts-key{font-family:var(--f-mono);font-size:16px;color:var(--ink);background:var(--paper);border:1px solid var(--rule);border-radius:10px;padding:8px 12px;min-width:0;width:100%}
+.row-btns.left{justify-content:flex-start}
+.howto{max-width:640px}
+.howto summary{cursor:pointer;color:var(--ai);font-weight:600}
+.howto ol{margin-top:10px}
+.howto p{margin-top:8px;font-size:.88rem}
+@media (max-width:520px){.set-row{grid-template-columns:minmax(0,1fr) 3rem}.set-row label{grid-column:1/-1}.set-row.key input{grid-column:1/-1}}
+/* iPhone zooms the page when a field under 16px gets focus */
+@media (max-width:760px){select,#v-search{font-size:16px}}
+
+/* 促音・拗音 lessons */
+.lesson{display:grid;gap:14px;margin-top:4px}
+.lesson:empty{display:none}
+.lesson-box{background:var(--sheet);border:1px solid var(--rule);border-radius:14px;padding:16px;display:grid;gap:12px;min-width:0}
+.demo{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.demo .sq{width:62px;height:62px;display:grid;place-items:center}
+.demo .sq .kana{font-size:2.3rem;line-height:1}
+.demo .sq .sm{position:absolute;left:13%;bottom:9%;font-size:1.4rem;color:var(--shu)}
+.demo-cap{font-size:.88rem;color:var(--ink-2);flex:1 1 220px;margin-left:8px}
+.pairs{display:grid;gap:8px}
+.pair{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);gap:10px;align-items:center;padding:10px 12px;border:1px solid var(--rule);border-radius:12px;background:var(--paper)}
+.pw{display:flex;gap:10px;align-items:center;min-width:0}
+.pw .kana{font-size:1.3rem;margin-right:6px}
+.pw .romaji{font-size:.8rem;color:var(--ink-2)}
+.pw .m{display:block;font-size:.8rem;color:var(--ink-2)}
+.vs{font-family:var(--f-mono);font-size:.72rem;color:var(--ink-3)}
+@media (max-width:520px){.pair{grid-template-columns:minmax(0,1fr)}.vs{display:none}}
+.word-chips{display:flex;flex-wrap:wrap;gap:6px}
+.wchip{display:inline-flex;align-items:baseline;gap:6px;border:1px solid var(--rule);background:var(--sheet);border-radius:10px;padding:4px 10px;cursor:pointer}
+.wchip:hover{border-color:var(--ai)}
+.wchip .kana{font-size:1.1rem}
+.wchip .romaji,.wchip .m{font-size:.75rem;color:var(--ink-2)}
+.play-big{display:inline-flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;width:118px;height:118px;border-radius:50%;border:1.5px solid var(--ai);background:var(--ai-soft);color:var(--ai);cursor:pointer;font-weight:600}
+.play-big svg{width:38px;height:38px}
+.q-opts.three{grid-template-columns:repeat(3,minmax(0,1fr))}
+@media (max-width:460px){.q-opts.three{grid-template-columns:minmax(0,1fr)}}
+
+.toast{position:fixed;left:50%;bottom:calc(18px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--paper);padding:9px 16px;border-radius:10px;font-size:.9rem;z-index:60;max-width:calc(100% - 32px)}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div class="brand">
+      <div class="mark sq" aria-hidden="true"><span>ひ</span></div>
+      <div>
+        <h1>平假名小助手</h1>
+        <p class="tagline">用認得的漢字記假名。易混字、單字、中英對照，一次練好。</p>
+      </div>
+    </div>
+    <div class="meter">
+      <div class="meter-head"><span>清音掌握</span><span class="num"><b id="m-ok">0</b> / 46</span></div>
+      <div class="bar" aria-hidden="true"><i id="b-ok"></i><i id="b-mid"></i><i id="b-weak"></i></div>
+      <div class="legend"><span class="lg ok">已掌握 <b id="m-ok2">0</b></span><span class="lg mid">練習中 <b id="m-mid">0</b></span><span class="lg weak">待加強 <b id="m-weak">0</b></span></div>
+      <div class="meter-actions">
+        <label for="level">目前學到</label><select id="level"></select>
+        <button class="btn-sm" id="btn-weak" type="button">練待加強的字</button>
+      </div>
+      <p class="sync"><span id="sync">進度存在這個瀏覽器</span>　·　<button type="button" class="linkish" data-goto="voice-settings">發音設定</button></p>
+    </div>
+  </header>
+
+  <nav class="tabs" role="tablist" aria-label="功能">
+    <button role="tab" type="button" data-tab="chart" aria-selected="true">五十音表</button>
+    <button role="tab" type="button" data-tab="confuse" aria-selected="false">易混淆</button>
+    <button role="tab" type="button" data-tab="practice" aria-selected="false">練習</button>
+    <button role="tab" type="button" data-tab="vocab" aria-selected="false">單字</button>
+    <button role="tab" type="button" data-tab="tips" aria-selected="false">記憶方法</button>
+  </nav>
+
+  <main>
+    <!-- 五十音表 -->
+    <section class="panel" id="tab-chart" role="tabpanel">
+      <div class="toolbar">
+        <div class="seg" role="group" aria-label="假名種類">
+          <button type="button" data-chart="basic" aria-pressed="true">清音 46</button>
+          <button type="button" data-chart="daku" aria-pressed="false">濁音・半濁音 25</button>
+          <button type="button" data-chart="yoon" aria-pressed="false">拗音 33</button>
+          <button type="button" data-chart="soku" aria-pressed="false">促音 っ</button>
+        </div>
+        <label class="switch"><input type="checkbox" id="show-romaji" checked> 顯示羅馬字</label>
+      </div>
+      <div class="chart-layout">
+        <div>
+          <div class="chart" id="chart"></div>
+          <p class="chart-note" id="chart-note"><span class="lg ok">已掌握（連對 3 次）</span><span class="lg mid">練習中</span><span class="lg weak">待加強</span><span>顏色淡的是還沒學到的行</span></p>
+          <div class="lesson" id="chart-extra"></div>
+        </div>
+        <aside class="aside">
+          <div class="aside-box">
+            <p class="label">怎麼用這張表</p>
+            <ol class="steps">
+              <li><p>點任何一個字，看它的<b>字源漢字</b>、記法、易混字和例字，按喇叭聽發音。</p></li>
+              <li><p>關掉「顯示羅馬字」，從頭唸一遍，唸不出來的再點開看。</p></li>
+              <li><p>練習後格子右上角會出現圓點。<b>紅點</b>是待加強，按上方「練待加強的字」專門練。</p></li>
+            </ol>
+          </div>
+          <div class="aside-box">
+            <p class="label">字源一眼看</p>
+            <p>平假名都是從漢字草書變來的。先認得漢字，假名就有了掛勾：</p>
+            <div class="origin-strip" id="origin-strip"></div>
+          </div>
+        </aside>
+      </div>
+    </section>
+
+    <!-- 易混淆 -->
+    <section class="panel" id="tab-confuse" role="tabpanel" hidden>
+      <div class="panel-head">
+        <div>
+          <h2>容易搞混的字</h2>
+          <p>長得像的放在一起比，只找「關鍵差異」：有沒有點、尾巴有沒有圈、肚子朝哪邊。點字可以看詳細，每組都能直接練。</p>
+        </div>
+      </div>
+      <div class="groups" id="groups"></div>
+      <div class="block">
+        <h2>大字和小字</h2>
+        <p>小 っ 和小 ゃ ゅ ょ 會改變拍數，也會改變意思。先按喇叭聽差別，再用特訓練到聽得出來。</p>
+        <div class="two-col">
+          <div class="lesson-box"><p class="label">促音 っ</p><div class="pairs" id="c-soku"></div><div><button type="button" class="btn" data-drillmode="soku">練促音特訓</button></div></div>
+          <div class="lesson-box"><p class="label">拗音 ゃ ゅ ょ</p><div class="pairs" id="c-yoon"></div><div><button type="button" class="btn" data-drillmode="yoon2">練拗音特訓</button></div></div>
+        </div>
+      </div>
+      <div class="block">
+        <h2>讀音陷阱</h2>
+        <p>這些不是長得像，而是讀音或寫法容易弄錯，考試常考。</p>
+        <div class="traps" id="traps"></div>
+      </div>
+    </section>
+
+    <!-- 練習 -->
+    <section class="panel" id="tab-practice" role="tabpanel" hidden>
+      <div id="p-setup" class="panel">
+        <div class="panel-head">
+          <div>
+            <h2>練習</h2>
+            <p>選題型和範圍。答錯的字會自動記下來，下次出題時出現得更多。</p>
+          </div>
+        </div>
+        <div class="p-grid">
+          <fieldset>
+            <legend>題型</legend>
+            <div class="modes" id="p-modes"></div>
+          </fieldset>
+          <div class="p-side">
+            <fieldset>
+              <legend>範圍</legend>
+              <div class="chips" id="p-sets"></div>
+              <div class="toolbar"><button class="linkish" type="button" data-preset="learned">只選已學的</button><button class="linkish" type="button" data-preset="basic">全部清音</button><button class="linkish" type="button" data-preset="all">全選</button></div>
+              <label class="switch"><input type="checkbox" id="p-weak"> 只練待加強的（錯題本）</label>
+            </fieldset>
+            <fieldset>
+              <legend>題數</legend>
+              <div class="seg" role="group" aria-label="題數" id="p-count">
+                <button type="button" data-count="10" aria-pressed="false">10 題</button>
+                <button type="button" data-count="20" aria-pressed="true">20 題</button>
+                <button type="button" data-count="30" aria-pressed="false">30 題</button>
+              </div>
+            </fieldset>
+            <label class="switch"><input type="checkbox" id="p-voice"> 答完自動唸出發音</label>
+            <button class="btn primary" type="button" id="p-start">開始練習</button>
+            <p class="p-note" id="p-note"></p>
+          </div>
+        </div>
+      </div>
+
+      <div id="p-run" class="panel" hidden>
+        <div class="q-top"><span id="q-count">1 / 20</span><div class="q-bar"><i id="q-bar"></i></div><button class="btn-sm" type="button" id="q-quit">結束</button></div>
+        <div class="q-card">
+          <p class="q-ask" id="q-ask"></p>
+          <div class="q-prompt" id="q-prompt"></div>
+          <div class="q-opts" id="q-opts"></div>
+          <form id="q-form" hidden autocomplete="off">
+            <input id="q-input" type="text" inputmode="latin" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="例如 shi" aria-label="輸入羅馬字">
+            <button class="btn primary" type="submit">確定</button>
+          </form>
+          <div class="q-fb" id="q-fb" hidden></div>
+          <button class="btn primary" type="button" id="q-next" hidden>下一題</button>
+        </div>
+        <p class="kbd-hint">鍵盤：按 1–4 選答案，Enter 下一題</p>
+      </div>
+
+      <div id="p-result" class="res" hidden></div>
+    </section>
+
+    <!-- 單字 -->
+    <section class="panel" id="tab-vocab" role="tabpanel" hidden>
+      <div class="panel-head">
+        <div>
+          <h2>簡單單字</h2>
+          <p>每個字都有羅馬字、中文和英文（考試用英文）。打開「遮住意思」可以自我測驗：先唸、先說英文，再點開對答案。</p>
+        </div>
+      </div>
+      <div class="chips" id="v-cats"></div>
+      <div class="toolbar">
+        <label class="switch"><input type="checkbox" id="v-learned"> 只顯示用到已學假名的</label>
+        <label class="switch"><input type="checkbox" id="v-cover"> 遮住意思</label>
+        <input type="search" id="v-search" placeholder="搜尋假名、羅馬字、中文或英文" aria-label="搜尋單字">
+      </div>
+      <p class="v-count" id="v-count"></p>
+      <div class="vlist" id="vlist"></div>
+    </section>
+
+    <!-- 記憶方法 -->
+    <section class="panel" id="tab-tips" role="tabpanel" hidden>
+      <div class="panel-head">
+        <div>
+          <h2>華人背平假名的方法</h2>
+          <p>整理自網路上中文學習者的經驗、日文教學網站和字源資料。重點是：別只靠死背五十音順序，用你已經會的漢字當掛勾。</p>
+        </div>
+      </div>
+      <div class="tips-grid">
+        <article class="tip">
+          <h3>字源法：從認得的漢字出發</h3>
+          <p>平假名是漢字草書再簡化的結果，46 個字都有對應的漢字。華人學這個最划算，因為漢字本來就認得。</p>
+          <p class="ex-line"><span class="han">安</span>→<span class="kana">あ</span>　<span class="han">加</span>→<span class="kana">か</span>　<span class="han">不</span>→<span class="kana">ふ</span>　<span class="han">仁</span>→<span class="kana">に</span></p>
+          <p>不少字源的讀音也接近假名：太 ta、奈 na、末 ma、毛 mo、也 ya、由 yu、利 ri、留 ru、呂 ro、和 wa。日本學者也承認有些字的演變過程說不清，所以字源當「掛勾」就好，不必背演變細節。</p>
+        </article>
+        <article class="tip">
+          <h3>圖像加諧音聯想</h3>
+          <p>把字形想成一個畫面，再配中文諧音，越誇張越好記。</p>
+          <p class="ex-line"><span class="kana">ろ</span> 像 3 →「媽媽要數到 3 囉 (ro)」<br><span class="kana">ち</span> 肚子往右挺 →「吃 (chi) 飽了」</p>
+          <p>自己編的聯想比別人給的更牢，看到不順眼的口訣就換掉。</p>
+        </article>
+        <article class="tip">
+          <h3>易混字並排比</h3>
+          <p>照五十音順序背，像的字會分散在不同行，永遠搞混。把長得像的放在一起，找出一個關鍵差異就好。「易混淆」頁就是照這個方法整理的。</p>
+        </article>
+        <article class="tip">
+          <h3>手、口、眼、耳一起用</h3>
+          <p>看字形、唸出聲、手寫一次、聽發音。平假名保留了毛筆的筆勢，照筆順寫，字形才不會歪，也比較容易分出 さ／ち、ぬ／め 這種字。</p>
+        </article>
+        <article class="tip">
+          <h3>字卡打散抽考，答錯的再考</h3>
+          <p>一面假名、一面讀音，洗亂了抽。答錯的字隔一陣子再考一次。這個小助手會自動記錄：答錯的字變紅點，連對 3 次變綠點。</p>
+        </article>
+        <article class="tip">
+          <h3>先平假名，再片假名</h3>
+          <p>兩套同時學容易混（片假名有自己的易混字，例如 シ／ツ、ソ／ン）。平假名穩了再開始片假名，會輕鬆很多。</p>
+        </article>
+      </div>
+
+      <div class="two-col">
+        <div class="block">
+          <h2>每天 15 分鐘的練習流程</h2>
+          <ol class="steps">
+            <li><p>五十音表點開今天要學的那一行，看字源和口訣，跟著發音唸。</p></li>
+            <li><p>到「易混淆」看跟這一行有關的組別。</p></li>
+            <li><p>練習：「看假名選讀音」20 題，再做「看讀音找假名」10 題。</p></li>
+            <li><p>用「拼音輸入」打羅馬字。考試要寫，光會選不夠。</p></li>
+            <li><p>單字頁打開「遮住意思」，唸出單字並說出英文意思。</p></li>
+            <li><p>隔天第一件事：先練待加強的字。</p></li>
+          </ol>
+        </div>
+        <div class="block">
+          <h2>華人特別要注意的發音</h2>
+          <ul class="plain">
+            <li><b>清音和濁音</b>（か／が、た／だ）：國語的ㄍ、ㄉ、ㄅ喉嚨不震動；日語濁音要震動。摸著喉嚨練，有震動的才是濁音。</li>
+            <li><b>う</b> 不要嘟嘴發成「烏」，嘴唇放鬆。</li>
+            <li><b>ら行</b> 舌尖輕彈一下，介於 l 和 r 之間。</li>
+            <li><b>ふ</b> 不是英文的 f，是輕輕吹氣。</li>
+            <li><b>拍數</b>會改變意思：おばさん（阿姨）／おばあさん（奶奶）、きて／きって、きや／きゃ。</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="block">
+        <h2>考試會用到的英文術語</h2>
+        <div class="tbl-wrap">
+          <table>
+            <thead><tr><th>ENGLISH</th><th>中文</th><th>例子</th></tr></thead>
+            <tbody>
+              <tr><td>hiragana</td><td>平假名</td><td><span class="kana">あ い う</span></td></tr>
+              <tr><td>katakana</td><td>片假名</td><td><span class="kana">ア イ ウ</span></td></tr>
+              <tr><td>rōmaji (Hepburn romanization)</td><td>羅馬字（黑本式拼法）</td><td>し = shi、ち = chi、つ = tsu、ふ = fu</td></tr>
+              <tr><td>gojūon chart</td><td>五十音表</td><td>あ行、か行……</td></tr>
+              <tr><td>dakuten ( ゛)</td><td>濁音符號</td><td><span class="kana">か → が</span>（ka → ga）</td></tr>
+              <tr><td>handakuten ( ゜)</td><td>半濁音符號</td><td><span class="kana">は → ぱ</span>（ha → pa）</td></tr>
+              <tr><td>yōon (contracted sound)</td><td>拗音</td><td><span class="kana">きゃ</span> kya</td></tr>
+              <tr><td>sokuon (small tsu, double consonant)</td><td>促音</td><td><span class="kana">きって</span> kitte</td></tr>
+              <tr><td>long vowel (chōon)</td><td>長音</td><td><span class="kana">おかあさん</span> okaasan / okāsan</td></tr>
+              <tr><td>particle</td><td>助詞</td><td><span class="kana">は</span> (wa)、<span class="kana">を</span> (o)、<span class="kana">へ</span> (e)</td></tr>
+              <tr><td>stroke order</td><td>筆順</td><td></td></tr>
+              <tr><td>mora (beat)</td><td>拍</td><td><span class="kana">きゃ</span> = 1 拍，<span class="kana">きや</span> = 2 拍</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="muted" style="font-size:.88rem">長音的羅馬字有兩種寫法：照假名寫（okaasan、otousan）或加長音符號（okāsan、otōsan）。照你們課本的規定寫。</p>
+      </div>
+
+      <div class="block">
+        <h2>資料來源</h2>
+        <ul class="sources">
+          <li><a href="https://zh.wikipedia.org/zh-tw/%E5%B9%B3%E5%81%87%E5%90%8D" target="_blank" rel="noopener">維基百科〈平假名〉</a>：46 個字的字源漢字對照</li>
+          <li><a href="https://k-rain.repo.nii.ac.jp/record/673/files/kokugakuinzasshi_122_09_002.pdf" target="_blank" rel="noopener">中山陽介〈平仮名の字源と草書〉（國學院大學）</a>：平假名來自萬葉假名的草書</li>
+          <li><a href="https://www.fun-japan.jp/tw/articles/7611" target="_blank" rel="noopener">FUN! JAPAN</a>：字源聯想與字卡打散抽考</li>
+          <li><a href="https://vocus.cc/article/655cd2eefd897800019fed1e" target="_blank" rel="noopener">方格子 vocus 學習筆記</a>：中文諧音口訣（ろ＝數到 3 囉）</li>
+          <li><a href="https://sspai.com/post/59463" target="_blank" rel="noopener">少數派</a>：平假名保留毛筆筆勢，照筆勢分組</li>
+          <li><a href="https://www.tofugu.com/japanese/learn-hiragana/" target="_blank" rel="noopener">Tofugu: Learn Hiragana</a>：每個字配一個圖像記法，特別處理 あ／お</li>
+          <li><a href="https://jalu.ch/languages/learning_hiragana_and_katakana.php" target="_blank" rel="noopener">jalu.ch</a>：把長得像的字分組比較</li>
+          <li><a href="https://migaku.com/blog/japanese/how-to-learn-hiragana-fast" target="_blank" rel="noopener">Migaku</a>：先學完平假名再學片假名</li>
+          <li><a href="https://apps.apple.com/tw/app/%E4%BA%94%E5%8D%81%E9%9F%B3%E8%BC%95%E9%AC%86%E5%AD%B8/id953946449" target="_blank" rel="noopener">五十音輕鬆學 App</a>：字源、聯想，以及手口眼耳並用</li>
+        </ul>
+      </div>
+
+      <div class="block" id="voice-settings">
+        <h2>發音設定</h2>
+        <p class="muted" id="voice-status"></p>
+        <div class="settings">
+          <div class="set-row">
+            <label for="tts-rate">語速</label>
+            <input type="range" id="tts-rate" min="0.6" max="1.1" step="0.05" value="0.85">
+            <b id="tts-rate-val" class="romaji">0.85</b>
+          </div>
+          <div class="set-row key">
+            <label for="tts-key">Google API 密鑰</label>
+            <input type="password" id="tts-key" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="貼上 API 密鑰，例如 AIza…">
+          </div>
+          <div class="row-btns left">
+            <button type="button" class="btn primary" id="tts-save">儲存密鑰</button>
+            <button type="button" class="btn" data-speak="こんにちは">測試發音：こんにちは</button>
+            <button type="button" class="btn" id="tts-clear">清除密鑰</button>
+          </div>
+        </div>
+        <details class="howto">
+          <summary>怎麼拿到 Google API 密鑰（約 10 分鐘，有免費額度）</summary>
+          <ol class="plain">
+            <li>到 <a href="https://console.cloud.google.com/" target="_blank" rel="noopener">Google Cloud Console</a> 建立一個專案，綁定帳單帳戶。每月有免費額度，個人練習用不完。</li>
+            <li>在「API 和服務 → 程式庫」搜尋 <b>Cloud Text-to-Speech API</b>，按「啟用」。</li>
+            <li>到「API 和服務 → 憑證」，按「建立憑證 → API 金鑰」。</li>
+            <li>編輯這把金鑰：<b>應用程式限制</b>選「網站」，加入 <span class="romaji">https://你的帳號.github.io/*</span>；<b>API 限制</b>只勾 Cloud Text-to-Speech API，然後儲存。</li>
+            <li>用 iPhone 的 Safari 打開你的 GitHub 網址，在這裡貼上金鑰，按「儲存密鑰」，再按「測試發音」。</li>
+          </ol>
+          <p class="muted">密鑰只存在這台裝置的瀏覽器裡，只會傳給 Google 產生語音，不會寫進網頁原始碼。加了網站限制，別人拿到也不能在其他網站使用。</p>
+          <p class="muted">加到主畫面：在 Safari 按下方「分享 → 加入主畫面」。從主畫面打開時要再貼一次密鑰，因為 iPhone 會把主畫面 App 和 Safari 的資料分開存。</p>
+        </details>
+      </div>
+
+      <div class="block">
+        <h2>練習紀錄</h2>
+        <p class="muted" id="sync-detail"></p>
+        <div><button class="btn danger" type="button" id="btn-reset">清除所有練習紀錄</button></div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<div class="overlay" id="overlay" hidden>
+  <div class="sheet" id="sheet" role="dialog" aria-modal="true" aria-labelledby="d-title"></div>
+</div>
+<div class="toast" id="toast" role="status" hidden></div>
+
+<script>
+(function(){
+'use strict';
+const $=(s,el=document)=>el.querySelector(s);
+const $$=(s,el=document)=>Array.from(el.querySelectorAll(s));
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const shuffle=a=>{for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;};
+const ICON_SPEAK='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 5 6 9H3v6h3l5 4z" fill="currentColor" stroke="none"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M18.5 5.5a9 9 0 0 1 0 13"/></svg>';
+
+/* ---------------- data ---------------- */
+const LEVELS=[
+  {id:'a',label:'あ行'},{id:'ka',label:'か行'},{id:'sa',label:'さ行'},{id:'ta',label:'た行'},
+  {id:'na',label:'な行'},{id:'ha',label:'は行'},{id:'ma',label:'ま行'},{id:'ya',label:'や行'},
+  {id:'ra',label:'ら行'},{id:'wa',label:'わ行・ん'},{id:'daku',label:'濁音・半濁音'},{id:'yoon',label:'拗音・促音'}
+];
+const BASIC_SETS=LEVELS.slice(0,10).map(l=>l.id);
+
+const ROWS=[
+  {set:'a', label:'あ行',ks:['あ','い','う','え','お']},
+  {set:'ka',label:'か行',ks:['か','き','く','け','こ']},
+  {set:'sa',label:'さ行',ks:['さ','し','す','せ','そ']},
+  {set:'ta',label:'た行',ks:['た','ち','つ','て','と']},
+  {set:'na',label:'な行',ks:['な','に','ぬ','ね','の']},
+  {set:'ha',label:'は行',ks:['は','ひ','ふ','へ','ほ']},
+  {set:'ma',label:'ま行',ks:['ま','み','む','め','も']},
+  {set:'ya',label:'や行',ks:['や','','ゆ','','よ']},
+  {set:'ra',label:'ら行',ks:['ら','り','る','れ','ろ']},
+  {set:'wa',label:'わ行',ks:['わ','','','','を']},
+  {set:'wa',label:'ん',  ks:['ん','','','','']}
+];
+
+// kana: [romaji, 字源, 字源補註, 字形記法, 發音提示, 易混字]
+const INFO={
+'あ':['a','安','','「安」寫快一點：寶蓋頭剩下左上交叉的「十」，下面的「女」繞成一個大圈。','像「啊」，嘴巴張大。','おめぬ'],
+'い':['i','以','','「以」去掉右邊的「人」，剩下兩筆並排：左邊長、右邊短。','像「衣」。','りこ'],
+'う':['u','宇','','「宇」的寶蓋頭縮成頭上一小撇，下面的「于」彎成一個大鉤，像側面的耳朵。','像「烏」，但嘴唇不要嘟起來，放鬆一點。','らつ'],
+'え':['e','衣','','「衣」的草書：頭上一點，下面寫成一個「Z」再往右拖出尾巴。','像「欸」。',''],
+'お':['o','於','','「於」的草書。跟 あ 很像，但右上角多一個獨立的點；左邊一橫，豎線直接繞圈，沒有交叉的十字。','像「喔」，嘴巴圓一點。','あすむ'],
+'か':['ka','加','','「加」的「力」幾乎原樣保留，右邊的「口」縮成一點。','像「卡」。字源「加」本身也讀 ka。','や'],
+'き':['ki','幾','','「幾」的草書：兩橫一豎，下面拖一個 c 形的彎。兩橫像鑰匙 (key) 的齒 → ki。印刷體下面常斷開，手寫連起來也對。','像英文 key。','さち'],
+'く':['ku','久','','「久」只剩一個「<」，像張開的鳥嘴在「咕咕」叫。','像「哭」，嘴唇放鬆。','へし'],
+'け':['ke','計','','「計」：左邊的「言」縮成一豎，右邊保留「十」，豎線長長拉下來。','接近注音「ㄎㄝ」。','はほに'],
+'こ':['ko','己','','「己」只剩上下兩橫，像兩條小魚（こい＝鯉魚）。','像「摳」，嘴巴圓一點。','いにた'],
+'さ':['sa','左','','「左」：一橫一斜豎，下面一個彎，開口朝右、肚子朝左（像英文 c）。','像「撒」。','きち'],
+'し':['shi','之','','「之」最後一筆拉長，剩下一個鉤子朝右上的魚鉤。','像「西」。羅馬字寫 shi，不是 si。','つも'],
+'す':['su','寸','','「寸」：一橫，一豎在中間打個圈再往下拉，像打了結的繩子。','像「斯」，嘴唇放鬆。','むお'],
+'せ':['se','世','','「世」少了右邊的部分：一長橫、兩豎，右邊那豎往下彎回來。字源「世」日語也讀 se。','接近注音「ㄙㄝ」。',''],
+'そ':['so','曾','日文寫作「曽」','「曾」頭上兩點連成一個「Z」，下面拉一條彎尾巴。印刷體上半部常斷成兩筆，手寫一筆到底也對。','像「搜」。',''],
+'た':['ta','太','','「太」：左邊一橫一撇是「ナ」，右下的點變成兩短橫「こ」。看成「ナ＋こ」。','像「他」。字源「太」也讀 ta。','なにこ'],
+'ち':['chi','知','','「知」的草書：一橫一豎，下面往右鼓出一個肚子。記成：吃 (chi) 飽了，肚子往前挺。','像「七」。羅馬字寫 chi。','さら'],
+'つ':['tsu','川','也有一說是「州」','「川」三筆連成一筆，剩下一道浪花般的弧線。','像「此」再帶一點 u，羅馬字寫 tsu。','うし'],
+'て':['te','天','','「天」寫快：一橫往右，再往左下彎回來。像伸出來的手，而「手」的日語剛好就讀 て。','接近注音「ㄊㄝ」。',''],
+'と':['to','止','','「止」只剩上面一小斜點和下面一條彎鉤，像一根釘子釘在彎彎的地上。','像「偷」但嘴巴圓一點。',''],
+'な':['na','奈','','「奈」：上面的「大」變成「ナ」，下面的「示」縮成右上一點和右下一個打結的圈。','像「那」。字源「奈」也讀 na。','たは'],
+'に':['ni','仁','','「仁」：左邊的「亻」變成一豎，右邊的「二」原封不動。','像「你」。','こけた'],
+'ぬ':['nu','奴','','「奴」：「女」和「又」連在一起寫，最後尾巴捲成一個小圈，像捲起來的麵條 (noodle) → nu。','像「奴」。','めねあ'],
+'ね':['ne','祢','即「禰」','「祢」：左邊的「礻」變成一豎，右邊轉一圈，尾巴打一個小圈，像貓（ねこ）捲起來的尾巴。','接近注音「ㄋㄝ」。','れわぬ'],
+'の':['no','乃','','「乃」一筆畫成一個圈，像禁止標誌「NO」。它也是 あ、め、ぬ 裡面的零件。','像英文 no。','めあ'],
+'は':['ha','波','','「波」：左邊的三點水縮成一豎，右邊的「皮」變成「十」加下方打結。','像「哈」。當助詞時（わたしは）讀 wa。','ほけよ'],
+'ひ':['hi','比','','「比」兩個「匕」連成一筆，像一張笑開的嘴「嘻嘻 (hi hi)」。','像「嘻」。',''],
+'ふ':['fu','不','','「不」：中間一個彎鉤，左右各一點，像富士山（ふじさん）和兩邊的雲。','輕輕吹氣的「呼」，介於 h 和 f 之間。羅馬字寫 fu。',''],
+'へ':['he','部','','「部」右邊的「阝」只剩一個山形「^」。','接近注音「ㄏㄝ」。當助詞時（がっこうへ）讀 e。','く'],
+'ほ':['ho','保','','「保」：左邊的「亻」變成一豎，右邊兩橫一豎打結。比 は 頂上多一橫，像戴了帽子 (hat → ho)。','像「齁」，嘴巴圓一點。','はまけ'],
+'ま':['ma','末','','「末」：兩橫一豎，最下面打一個結，像媽媽綁起的髮髻。','像「媽」。字源「末」日語也讀 ma。','ほよも'],
+'み':['mi','美','','「美」的草書：左邊繞一個圈，右邊一筆斜斜收尾，整體像數字「21」。','像「咪」。字源「美」日語也讀 mi。',''],
+'む':['mu','武','','「武」：一橫，豎線往下打個圈，尾巴往右上翹，右上角再加一點。像牛叫「哞 (mu)」，那一點是牛角。','像「木」，嘴唇不要太嘟。','すお'],
+'め':['me','女','','「女」的草書：一撇和一個圈交叉。日語的「女」本來就讀 me；它也像一隻眼睛，め 就是「目」(eye)。','接近注音「ㄇㄝ」。','ぬあの'],
+'も':['mo','毛','','「毛」：先寫一個 し 形的魚鉤，再穿過兩橫。像魚鉤上掛了兩條魚 → more fish。','像「摸」。字源「毛」也讀 mo。','しま'],
+'や':['ya','也','','「也」的草書：一個往右的彎、一短撇、再一豎，像犛牛 (yak) 的角。','像「呀」。字源「也」也讀 ya。','か'],
+'ゆ':['yu','由','','「由」：左邊一個彎，中間一豎直直穿過，像一條側面的魚，而「魚」也唸 yú。','像「優」。字源「由」也讀 yu。',''],
+'よ':['yo','与','即「與」','「与」：右上一短橫，一豎往下打結，結尾向右。像溜溜球 (yo-yo) 的繩子打了結。','像「唷」。字源「與」也讀 yo。','まは'],
+'ら':['ra','良','','「良」：頭上一點，左邊一豎下來再往右繞出一個彎，像一張椅子的側面。','舌尖輕彈一下，介於「拉」和英文 la 之間。','うちる'],
+'り':['ri','利','','「利」：左邊的「禾」縮成短短一筆，右邊的「刂」長長拉下來。左短右長。','像「哩」，舌尖輕彈。','い'],
+'る':['ru','留','','「留」的草書：像數字 3，最下面打一個小圈（loop → ru）。','像「嚕」，舌尖輕彈。','ろら'],
+'れ':['re','礼','即「禮」','「礼」：左邊的「礻」變成一豎，右邊繞一下，尾巴往右上踢出去，像 r 抬起腳。','接近注音「ㄌㄝ」，舌尖輕彈。','ねわ'],
+'ろ':['ro','呂','','「呂」兩個口連寫，剩一個數字「3」，尾巴不打圈。口訣：媽媽要數到 3 囉 (ro)！','像「囉」，舌尖輕彈。','るら'],
+'わ':['wa','和','','「和」：左邊的「禾」變成一豎，右邊的「口」繞成一個收回來的大肚子。日語的「和」本來就讀 wa。','像「哇」。','れね'],
+'を':['wo','遠','','「遠」的草書濃縮成三筆。現代日語只當助詞用，例如 ほんを よむ（讀書）。','讀音和 お 一樣是 o。羅馬字寫 wo 或 o，照課本規定。','お'],
+'ん':['n','无','即「無」','「无」的草書，像手寫的英文 n 拉長了左腳。它是唯一不帶母音的假名，不會出現在字首。','鼻音「嗯」。','']
+};
+
+const ALTS={'し':['si'],'ち':['ti'],'つ':['tu'],'ふ':['hu'],'を':['o'],'ん':['nn'],
+  'じ':['zi'],'ぢ':['di','dzi','zi'],'づ':['du','dzu'],
+  'しゃ':['sya'],'しゅ':['syu'],'しょ':['syo'],
+  'ちゃ':['tya','cya'],'ちゅ':['tyu','cyu'],'ちょ':['tyo','cyo'],
+  'じゃ':['zya','jya'],'じゅ':['zyu','jyu'],'じょ':['zyo','jyo']};
+
+const DAKU_ROWS=[
+  {label:'が行',c:'g',ks:['が','ぎ','ぐ','げ','ご'],rs:['ga','gi','gu','ge','go']},
+  {label:'ざ行',c:'z',ks:['ざ','じ','ず','ぜ','ぞ'],rs:['za','ji','zu','ze','zo']},
+  {label:'だ行',c:'d',ks:['だ','ぢ','づ','で','ど'],rs:['da','ji','zu','de','do']},
+  {label:'ば行',c:'b',ks:['ば','び','ぶ','べ','ぼ'],rs:['ba','bi','bu','be','bo']},
+  {label:'ぱ行',c:'p',ks:['ぱ','ぴ','ぷ','ぺ','ぽ'],rs:['pa','pi','pu','pe','po']}
+];
+const DAKU_NOTES={
+  g:'喉嚨要震動。國語的「ㄍ」其實不震動，比較接近日語 か 在字中間的聲音，所以要刻意讓喉嚨震一下。',
+  z:'ざ ず ぜ ぞ 的子音是 z（喉嚨震動的 s）；じ 讀 ji，像英文 jeep 的 j。',
+  d:'だ で ど 的子音是 d，喉嚨要震動。ぢ、づ 讀音和 じ、ず 一樣，很少用。',
+  b:'嘴唇閉起來，喉嚨震動，發 b。',
+  p:'嘴唇閉起來再彈開，發 p，喉嚨不震動。只有 は 行能加小圈 ゜。'
+};
+const YOON_ROWS=[
+  ['き',['kya','kyu','kyo']],['し',['sha','shu','sho']],['ち',['cha','chu','cho']],['に',['nya','nyu','nyo']],
+  ['ひ',['hya','hyu','hyo']],['み',['mya','myu','myo']],['り',['rya','ryu','ryo']],['ぎ',['gya','gyu','gyo']],
+  ['じ',['ja','ju','jo']],['び',['bya','byu','byo']],['ぴ',['pya','pyu','pyo']]
+];
+const SMALL=['ゃ','ゅ','ょ'];
+const SMALL_INFO={'ゃ':['や','ya'],'ゅ':['ゆ','yu'],'ょ':['よ','yo']};
+
+const ITEMS=[]; const ITEM={};
+ROWS.forEach(row=>row.ks.forEach(k=>{
+  if(!k) return;
+  const d=INFO[k];
+  const it={k,r:d[0],type:'basic',set:row.set,row:row.label,origin:d[1],originNote:d[2],shape:d[3],sound:d[4],cf:[...d[5]],alts:ALTS[k]||[]};
+  ITEMS.push(it); ITEM[k]=it;
+}));
+DAKU_ROWS.forEach(row=>row.ks.forEach((k,i)=>{
+  const off=row.c==='p'?2:1;
+  const base=String.fromCharCode(k.charCodeAt(0)-off);
+  const it={k,r:row.rs[i],type:'daku',set:'daku',row:row.label,base,mark:off===2?'゜':'゛',cons:row.c,alts:ALTS[k]||[]};
+  ITEMS.push(it); ITEM[k]=it;
+}));
+YOON_ROWS.forEach(([b,rs])=>SMALL.forEach((s,i)=>{
+  const k=b+s;
+  const it={k,r:rs[i],type:'yoon',set:'yoon',row:b+' 行',base:b,small:s,alts:ALTS[k]||[]};
+  ITEMS.push(it); ITEM[k]=it;
+}));
+
+const GROUPS=[
+  {id:'ao',ks:['あ','お'],key:'有獨立一點的是 お',notes:{'あ':'左上是交叉的「十」，再繞大圈。','お':'左邊一橫，豎線直接繞圈，右上多一點。像驚訝時「哦！」冒出來的一點。'}},
+  {id:'nume',ks:['の','め','ぬ'],key:'尾巴捲小圈的是 ぬ',notes:{'の':'一筆一個圈，是基本零件。','め':'一撇穿過 の 形的圈，尾巴乾淨收掉。像一隻眼睛（目）。','ぬ':'め 的尾巴再捲一個小圈，像捲起的麵條 (noodle)。'}},
+  {id:'nerewa',ks:['ね','れ','わ'],intro:'三個字左邊都是一豎，只差右邊的結尾。',key:'圈是 ね、踢是 れ、包是 わ',notes:{'ね':'尾巴打一個小圈，像貓（ねこ）捲尾巴。','れ':'尾巴往右上踢出去。','わ':'尾巴收回來包成大肚子，張大嘴「哇」。'}},
+  {id:'ruro',ks:['ろ','る'],key:'る 有 loop，ろ 沒有',notes:{'ろ':'像數字 3，尾巴開放。數到 3 囉 (ro)。','る':'3 的尾巴捲一個小圈（loop → ru）。'}},
+  {id:'sachiki',ks:['さ','ち','き'],key:'さ、ち 左右相反；き 是 さ 多一橫',notes:{'さ':'一橫，下面的彎肚子朝左（像 c）。','ち':'一橫，下面的彎肚子朝右。吃 (chi) 飽了肚子往前挺。','き':'比 さ 多一橫，兩橫像鑰匙 (key) 的齒。'}},
+  {id:'hahoke',ks:['け','は','ほ'],intro:'三個字左邊都有一豎。',key:'不打結是 け、打結是 は、戴帽是 ほ',notes:{'け':'右邊是「十」，豎線直直拉下，不打結。','は':'右邊是「十」，下面打一個結。','ほ':'は 的頂上多一橫封住，像戴了帽子。'}},
+  {id:'mayomo',ks:['よ','ま','も'],key:'一橫是 よ、兩橫是 ま、魚鉤是 も',notes:{'よ':'右上一短橫，豎線往下打結。','ま':'兩橫一豎再打結，比 よ 多一橫。ほ 就是左邊多一豎的 ま。','も':'先寫魚鉤 し，再穿兩橫，下面不打結、開口朝上。'}},
+  {id:'iriko',ks:['い','り','こ'],key:'站著的是 い、り（り 右腳長）；躺著的是 こ',notes:{'い':'兩筆都短，左長右短。','り':'右邊那筆長長拉下來，來自「刂」。','こ':'上下兩橫，就是 い 躺平。'}},
+  {id:'utsura',ks:['つ','う','ら'],key:'光頭是 つ、戴帽是 う、有椅背是 ら',notes:{'つ':'只有一道弧。','う':'つ 的頭上加一小撇。','ら':'頭上一點，左邊先一豎再繞彎，像椅子側面。'}},
+  {id:'tanani',ks:['に','た','な'],key:'亻＋二是 に、ナ＋こ是 た、ナ＋結是 な',notes:{'に':'左邊一豎，右邊「二」。','た':'左邊「ナ」，右下兩短橫。','な':'左邊「ナ」，右上一點、右下打結。'}},
+  {id:'sumuo',ks:['す','む','お'],key:'直尾是 す、翹尾帶點是 む、大圈帶點是 お',notes:{'す':'一豎中間打圈，然後直直往下。','む':'打圈後尾巴往右上翹，右上加一點（牛角）。','お':'豎線往下繞一個大圈，右上一點。'}},
+  {id:'kuhe',ks:['く','へ','し','つ'],key:'看方向：く 朝右、へ 朝下、し 往右上勾、つ 收向左下',notes:{'く':'「<」形，嘴巴朝右張開。','へ':'「^」形，像一座小山。','し':'往下再往右上勾，像魚鉤。','つ':'往右鼓起，再收向左下。'}},
+  {id:'bapa',ks:['は','ば','ぱ'],key:'兩點 ゛ 是 b，小圈 ゜ 是 p',notes:{'は':'清音 ha。','ば':'加濁點 ゛(dakuten) → ba，喉嚨要震動。','ぱ':'加半濁點 ゜(handakuten) → pa，只有 は 行有。'}}
+];
+
+const TRAPS=[
+  ['お ／ を','讀音都是 o。を 只當助詞：ほんを よむ。'],
+  ['じ ／ ぢ、ず ／ づ','讀音一樣（ji、zu）。ぢ、づ 很少用，例如 はなぢ（鼻血）、つづく（繼續）。'],
+  ['助詞 は','讀 wa：わたしは、こんにちは。'],
+  ['助詞 へ','讀 e：がっこうへ いく。'],
+  ['や ／ ゃ','大字兩拍、小字一拍：きや 是 ki-ya，きゃ 是 kya。'],
+  ['つ ／ っ','小 っ 是停一拍，羅馬字把下一個子音寫兩次：きて kite，きって kitte。'],
+  ['長音','多一拍意思就不同：おばさん（阿姨）／おばあさん（奶奶）。'],
+  ['清音 ／ 濁音','か／が、た／だ：國語的ㄍㄉㄅ喉嚨不震動，日語的濁音要震動。']
+];
+
+// [假名, 漢字, 羅馬字, 中文, English, 分類]
+const RAW_WORDS=[
+['あい','愛','ai','愛','love','basic'],['あお','青','ao','藍色','blue','basic'],['あか','赤','aka','紅色','red','basic'],
+['あさ','朝','asa','早上','morning','basic'],['あし','足','ashi','腳','foot; leg','basic'],['あめ','雨','ame','雨','rain','basic'],
+['いえ','家','ie','家；房子','house; home','basic'],['いけ','池','ike','池塘','pond','basic'],['いす','椅子','isu','椅子','chair','basic'],
+['いぬ','犬','inu','狗','dog','basic'],['いま','今','ima','現在','now','basic'],['いろ','色','iro','顏色','color','basic'],
+['うえ','上','ue','上面','above; on top','basic'],['うし','牛','ushi','牛','cow','basic'],['うみ','海','umi','海','sea; ocean','basic'],
+['え','絵','e','圖畫','picture; drawing','basic'],['えき','駅','eki','車站','(train) station','basic'],['おに','鬼','oni','鬼','ogre; demon','basic'],
+['かお','顔','kao','臉','face','basic'],['かさ','傘','kasa','雨傘','umbrella','basic'],['かわ','川','kawa','河川','river','basic'],
+['き','木','ki','樹','tree','basic'],['くち','口','kuchi','嘴巴','mouth','basic'],['くつ','靴','kutsu','鞋子','shoes','basic'],
+['くも','雲','kumo','雲','cloud','basic'],['くるま','車','kuruma','汽車','car','basic'],['こえ','声','koe','聲音','voice','basic'],
+['ここ','','koko','這裡','here','basic'],['こころ','心','kokoro','心','heart; mind','basic'],['さかな','魚','sakana','魚','fish','basic'],
+['さけ','酒','sake','酒','alcohol; sake','basic'],['さる','猿','saru','猴子','monkey','basic'],['しお','塩','shio','鹽','salt','basic'],
+['した','下','shita','下面','below; under','basic'],['すし','寿司','sushi','壽司','sushi','basic'],['すき','好き','suki','喜歡','to like','basic'],
+['せかい','世界','sekai','世界','world','basic'],['そと','外','soto','外面','outside','basic'],['そら','空','sora','天空','sky','basic'],
+['たかい','高い','takai','高；貴','tall; expensive','basic'],['たこ','','tako','章魚','octopus','basic'],['ちかい','近い','chikai','近','near; close','basic'],
+['つくえ','机','tsukue','書桌','desk','basic'],['て','手','te','手','hand','basic'],['とけい','時計','tokei','時鐘；手錶','clock; watch','basic'],
+['とり','鳥','tori','鳥','bird','basic'],['なつ','夏','natsu','夏天','summer','basic'],['なまえ','名前','namae','名字','name','basic'],
+['にく','肉','niku','肉','meat','basic'],['にし','西','nishi','西邊','west','basic'],['ぬの','布','nuno','布','cloth','basic'],
+['ねこ','猫','neko','貓','cat','basic'],['のみもの','飲み物','nomimono','飲料','drink; beverage','basic'],['はな','花','hana','花','flower','basic'],
+['はる','春','haru','春天','spring (season)','basic'],['ひと','人','hito','人','person','basic'],['ふく','服','fuku','衣服','clothes','basic'],
+['ふね','船','fune','船','ship; boat','basic'],['ふゆ','冬','fuyu','冬天','winter','basic'],['へや','部屋','heya','房間','room','basic'],
+['へそ','','heso','肚臍','belly button','basic'],['ほし','星','hoshi','星星','star','basic'],['ほん','本','hon','書','book','basic'],
+['まち','町','machi','城鎮','town','basic'],['みせ','店','mise','商店','shop; store','basic'],['みみ','耳','mimi','耳朵','ear','basic'],
+['むし','虫','mushi','蟲','insect; bug','basic'],['め','目','me','眼睛','eye','basic'],['もも','桃','momo','桃子','peach','basic'],
+['やさい','野菜','yasai','蔬菜','vegetable','basic'],['やま','山','yama','山','mountain','basic'],['ゆき','雪','yuki','雪','snow','basic'],
+['ゆめ','夢','yume','夢','dream','basic'],['よる','夜','yoru','晚上','night','basic'],['れきし','歴史','rekishi','歷史','history','basic'],
+['わたし','私','watashi','我','I; me','basic'],['わに','鰐','wani','鱷魚','crocodile','basic'],
+['おと','音','oto','聲音','sound','basic'],['さか','坂','saka','坡道','slope; hill','basic'],['かこ','過去','kako','過去','the past','basic'],
+['きて','来て','kite','來（請過來）','come (te-form)','basic'],['きよう','器用','kiyou','手巧','skillful (with hands)','basic'],['りよう','利用','riyou','利用','use; make use of','basic'],
+['かぎ','鍵','kagi','鑰匙','key','daku'],['かぐ','家具','kagu','家具','furniture','daku'],['げんき','元気','genki','有精神；健康','healthy; energetic','daku'],
+['ごはん','ご飯','gohan','飯；一餐','rice; meal','daku'],['てがみ','手紙','tegami','信','letter (mail)','daku'],['がくせい','学生','gakusei','學生','student','daku'],
+['えいご','英語','eigo','英語','English (language)','daku'],['にほんご','日本語','nihongo','日語','Japanese (language)','daku'],['ひらがな','平仮名','hiragana','平假名','hiragana','daku'],
+['りんご','','ringo','蘋果','apple','daku'],['たまご','卵','tamago','蛋','egg','daku'],['かぜ','風','kaze','風','wind','daku'],
+['かぞく','家族','kazoku','家人','family','daku'],['ぞう','象','zou','大象','elephant','daku'],['じかん','時間','jikan','時間','time','daku'],
+['みず','水','mizu','水','water','daku'],['ともだち','友達','tomodachi','朋友','friend','daku'],['だれ','誰','dare','誰','who','daku'],
+['でんわ','電話','denwa','電話','telephone','daku'],['まど','窓','mado','窗戶','window','daku'],['どこ','','doko','哪裡','where','daku'],
+['はなぢ','鼻血','hanaji','鼻血','nosebleed','daku'],['つづく','続く','tsuzuku','繼續','to continue','daku'],['かばん','鞄','kaban','包包','bag','daku'],
+['えび','海老','ebi','蝦子','shrimp','daku'],['ぶた','豚','buta','豬','pig','daku'],['たべもの','食べ物','tabemono','食物','food','daku'],
+['ぼうし','帽子','boushi','帽子','hat','daku'],['てんぷら','天ぷら','tenpura','天婦羅','tempura','daku'],['えんぴつ','鉛筆','enpitsu','鉛筆','pencil','daku'],
+['さんぽ','散歩','sanpo','散步','walk; stroll','daku'],['ぺこぺこ','','pekopeko','肚子很餓','starving; very hungry','daku'],
+['じゆう','自由','jiyuu','自由','freedom','daku'],['びよういん','美容院','biyouin','美容院','beauty salon','daku'],
+['きゃく','客','kyaku','客人','guest; customer','yoon'],['きょう','今日','kyou','今天','today','yoon'],['しゃしん','写真','shashin','照片','photo','yoon'],
+['いしゃ','医者','isha','醫生','doctor','yoon'],['でんしゃ','電車','densha','電車','train','yoon'],['しゅくだい','宿題','shukudai','作業','homework','yoon'],
+['しょうゆ','醤油','shouyu','醬油','soy sauce','yoon'],['おちゃ','お茶','ocha','茶','(green) tea','yoon'],['ちょっと','','chotto','一點點；稍微','a little','yoon'],
+['こんにゃく','','konnyaku','蒟蒻','konjac','yoon'],['ひゃく','百','hyaku','一百','hundred','yoon'],['みょうじ','名字','myouji','姓氏','family name; surname','yoon'],
+['りゅう','竜','ryuu','龍','dragon','yoon'],['りょこう','旅行','ryokou','旅行','trip; travel','yoon'],['ぎゅうにゅう','牛乳','gyuunyuu','牛奶','milk','yoon'],
+['きんぎょ','金魚','kingyo','金魚','goldfish','yoon'],['じょうず','上手','jouzu','擅長','good at; skillful','yoon'],['びょういん','病院','byouin','醫院','hospital','yoon'],
+['きって','切手','kitte','郵票','(postage) stamp','yoon'],['がっこう','学校','gakkou','學校','school','yoon'],['ざっし','雑誌','zasshi','雜誌','magazine','yoon'],
+['いっぱい','','ippai','滿滿的；很多','full; a lot','yoon'],
+['りょう','寮','ryou','宿舍','dormitory','yoon'],['おっと','夫','otto','丈夫','husband','yoon'],['さっか','作家','sakka','作家','writer; author','yoon'],
+['かっこ','括弧','kakko','括號','parentheses; brackets','yoon'],['まっちゃ','抹茶','matcha','抹茶','matcha (green tea)','yoon'],['いっしょ','一緒','issho','一起','together','yoon'],
+['きっぷ','切符','kippu','車票','ticket','yoon'],['しゅっぱつ','出発','shuppatsu','出發','departure','yoon'],
+['おかあさん','お母さん','okaasan','媽媽','mother','long'],['おとうさん','お父さん','otousan','爸爸','father','long'],['おにいさん','お兄さん','oniisan','哥哥','older brother','long'],
+['おねえさん','お姉さん','oneesan','姊姊','older sister','long'],['おばさん','','obasan','阿姨；伯母','aunt','long'],['おばあさん','','obaasan','奶奶；外婆','grandmother','long'],
+['せんせい','先生','sensei','老師','teacher','long'],['ひこうき','飛行機','hikouki','飛機','airplane','long'],
+['ありがとう','','arigatou','謝謝','thank you','greet'],['おはよう','','ohayou','早安','good morning','greet'],['こんにちは','','konnichiwa','你好；午安','hello; good afternoon','greet'],
+['こんばんは','','konbanwa','晚上好','good evening','greet'],['さようなら','','sayounara','再見','goodbye','greet'],['おやすみなさい','','oyasuminasai','晚安（睡前）','good night','greet'],
+['すみません','','sumimasen','不好意思；對不起','excuse me; sorry','greet'],['はい','','hai','是；好','yes','greet'],['いいえ','','iie','不是','no','greet'],
+['いただきます','','itadakimasu','我開動了','said before eating','greet'],['はじめまして','','hajimemashite','初次見面','nice to meet you','greet'],['おねがいします','お願いします','onegaishimasu','拜託了；麻煩你','please','greet'],
+['いち','一','ichi','一','one (1)','num'],['に','二','ni','二','two (2)','num'],['さん','三','san','三','three (3)','num'],
+['よん','四','yon','四','four (4)','num'],['ご','五','go','五','five (5)','num'],['ろく','六','roku','六','six (6)','num'],
+['なな','七','nana','七','seven (7)','num'],['はち','八','hachi','八','eight (8)','num'],['きゅう','九','kyuu','九','nine (9)','num'],['じゅう','十','juu','十','ten (10)','num'],
+['ほんを よむ','本を読む','hon o yomu','讀書','to read a book','phrase'],['わたしは がくせいです','私は学生です','watashi wa gakusei desu','我是學生','I am a student.','phrase'],
+['がっこうへ いく','学校へ行く','gakkou e iku','去學校','to go to school','phrase'],['これは なんですか','','kore wa nan desu ka','這是什麼？','What is this?','phrase']
+];
+const CATS=[['all','全部'],['basic','清音'],['daku','濁音・半濁音'],['yoon','拗音・促音'],['long','長音'],['greet','打招呼'],['num','數字'],['phrase','短句・助詞']];
+const CAT_LABEL=Object.fromEntries(CATS);
+
+function wordSets(k){
+  const s=new Set();
+  for(const ch of k.replace(/\s/g,'')){
+    if(ch==='っ'||SMALL.includes(ch)){s.add('yoon');continue;}
+    const it=ITEM[ch]; if(it) s.add(it.set);
+  }
+  return s;
+}
+const WORDS=RAW_WORDS.map(([k,kanji,r,zh,en,cat])=>({k,kanji,r,zh,en,cat,sets:wordSets(k)}));
+const WORD={}; WORDS.forEach(w=>WORD[w.k]=w);
+
+// 促音・拗音特訓: [正確的字, 類別, 干擾選項 [假名, 羅馬字]]。干擾選項可以不是真的字，只用來分辨大字小字。
+const RAW_DRILL=[
+['きって','soku',[['きて','kite'],['きつて','kitsute']]],['きて','soku',[['きって','kitte'],['きいて','kiite']]],
+['おっと','soku',[['おと','oto'],['おつと','otsuto']]],['おと','soku',[['おっと','otto'],['おうと','outo']]],
+['さっか','soku',[['さか','saka'],['さつか','satsuka']]],['さか','soku',[['さっか','sakka'],['さあか','saaka']]],
+['かっこ','soku',[['かこ','kako'],['かつこ','katsuko']]],['かこ','soku',[['かっこ','kakko'],['かあこ','kaako']]],
+['ざっし','soku',[['ざし','zashi'],['ざつし','zatsushi']]],['がっこう','soku',[['がこう','gakou'],['がつこう','gatsukou']]],
+['まっちゃ','soku',[['まちゃ','macha'],['まつちゃ','matsucha']]],['いっしょ','soku',[['いしょ','isho'],['いつしょ','itsusho']]],
+['きっぷ','soku',[['きぷ','kipu'],['きつぷ','kitsupu']]],['ちょっと','soku',[['ちょと','choto'],['ちょつと','chotsuto']]],
+['いっぱい','soku',[['いぱい','ipai'],['いつぱい','itsupai']]],['しゅっぱつ','soku',[['しゅぱつ','shupatsu'],['しゅつぱつ','shutsupatsu']]],
+['びょういん','yoon',[['びよういん','biyouin'],['びょいん','byoin']]],['びよういん','yoon',[['びょういん','byouin'],['びよいん','biyoin']]],
+['じゅう','yoon',[['じゆう','jiyuu'],['じゅ','ju']]],['じゆう','yoon',[['じゅう','juu'],['じよう','jiyou']]],
+['きょう','yoon',[['きよう','kiyou'],['きょ','kyo']]],['きよう','yoon',[['きょう','kyou'],['きゆう','kiyuu']]],
+['りょう','yoon',[['りよう','riyou'],['りゅう','ryuu']]],['りよう','yoon',[['りょう','ryou'],['りやう','riyau']]],
+['ひゃく','yoon',[['ひやく','hiyaku'],['ひょく','hyoku']]],['しゃしん','yoon',[['しやしん','shiyashin'],['しょしん','shoshin']]],
+['おちゃ','yoon',[['おちや','ochiya'],['おちょ','ocho']]],['でんしゃ','yoon',[['でんしや','denshiya'],['でんしゅ','denshu']]],
+['りょこう','yoon',[['りよこう','riyokou'],['りゅこう','ryukou']]],['きゃく','yoon',[['きやく','kiyaku'],['きゅく','kyuku']]],
+['しゅくだい','yoon',[['しゆくだい','shiyukudai'],['しょくだい','shokudai']]],['ぎゅうにゅう','yoon',[['ぎゆうにゆう','giyuuniyuu'],['ぎょうにょう','gyounyou']]]
+];
+const DRILL=RAW_DRILL.filter(([k])=>WORD[k]).map(([k,kind,alts])=>({k,kind,alts,w:WORD[k],r:WORD[k].r}));
+const DRILL_MAP={}; DRILL.forEach(d=>DRILL_MAP[d.k]=d);
+const SOKU_PAIRS=[['きって','きて'],['おっと','おと'],['さっか','さか'],['かっこ','かこ']];
+const YOON_PAIRS=[['びょういん','びよういん'],['じゅう','じゆう'],['きょう','きよう'],['りょう','りよう']];
+const SOKU_MORE=['がっこう','ざっし','ちょっと','いっぱい','まっちゃ','いっしょ','きっぷ','しゅっぱつ'];
+
+const MODES=[
+  {id:'k2r',label:'看假名選讀音',desc:'看到 あ，選出 a'},
+  {id:'r2k',label:'看讀音找假名',desc:'看到 a，從長得像的字裡找出 あ'},
+  {id:'type',label:'拼音輸入',desc:'看到假名，自己打出羅馬字'},
+  {id:'conf',label:'易混字特訓',desc:'只考容易搞混的字'},
+  {id:'w2e',label:'單字 → 英文',desc:'看日文單字，選英文意思'},
+  {id:'e2w',label:'英文 → 單字',desc:'看英文，找出日文單字'},
+  {id:'soku',label:'促音特訓',desc:'分清 きって／きて：聽音、看字、選羅馬字'},
+  {id:'yoon2',label:'拗音特訓',desc:'分清 きょう／きよう：聽音、看字、選羅馬字'}
+];
+const STATUS_LABEL={new:'還沒練過',mid:'練習中',ok:'已掌握',weak:'待加強'};
+
+/* ---------------- state ---------------- */
+const LS_KEY='hiragana-helper-v1', UI_KEY='hiragana-helper-ui';
+function blankState(){return {v:1,level:9,stats:{},wstats:{},dstats:{},prefs:{mode:'k2r',sets:null,weak:false,count:20,voice:false},updatedAt:0};}
+function normalize(s){
+  const b=blankState(); if(!s||typeof s!=='object') return b;
+  return {v:1,level:Number.isInteger(s.level)?Math.min(Math.max(s.level,0),LEVELS.length-1):b.level,
+    stats:(s.stats&&typeof s.stats==='object')?s.stats:{},wstats:(s.wstats&&typeof s.wstats==='object')?s.wstats:{},
+    dstats:(s.dstats&&typeof s.dstats==='object')?s.dstats:{},
+    prefs:Object.assign(b.prefs,s.prefs||{}),updatedAt:s.updatedAt||0};
+}
+function loadJSON(key){try{const raw=localStorage.getItem(key);return raw?JSON.parse(raw):null;}catch(e){return null;}}
+function saveJSON(key,val){try{localStorage.setItem(key,JSON.stringify(val));}catch(e){}}
+let state=normalize(JSON.parse(JSON.stringify(loadJSON(LS_KEY)||blankState())));
+const ui=Object.assign({tab:'chart',chart:'basic',romaji:true,cat:'all',learned:false,cover:false},loadJSON(UI_KEY)||{});
+function saveUI(){saveJSON(UI_KEY,ui);}
+
+function learnedSets(){return LEVELS.slice(0,state.level+1).map(l=>l.id);}
+function status(k,bag){bag=bag||state.stats;const s=bag[k];if(!s)return 'new';if(s.s>=3)return 'ok';if(s.w>0&&s.s<2)return 'weak';return 'mid';}
+function weight(st){return st==='weak'?4:st==='new'?3:st==='mid'?2:1;}
+function record(k,ok,bag){
+  const s=bag[k]||(bag[k]={c:0,w:0,s:0});
+  if(ok){s.c++;s.s++;}else{s.w++;s.s=0;}
+  s.t=Date.now(); persist();
+}
+
+/* ---------------- cloud sync (db capability) ---------------- */
+const cloud={ref:null,mode:'local',writing:false,pending:false,timer:null};
+function setSync(mode){
+  cloud.mode=mode;
+  const t={local:'進度存在這個瀏覽器',syncing:'同步中…',cloud:'進度已存到你的帳號，換裝置也能接著練'}[mode]||'進度存在這個瀏覽器';
+  $('#sync').textContent=t;
+  const inClaude=!!(window.claude&&typeof window.claude.use==='function');
+  $('#sync-detail').textContent=mode!=='local'
+    ?'進度存在你的帳號裡，只有你自己看得到。'
+    :inClaude
+      ?'目前進度只存在這個瀏覽器。用 Claude 帳號登入開啟這個頁面，就會自動存到帳號，手機和電腦都能接著練。'
+      :'進度存在這個瀏覽器裡。換手機或換瀏覽器不會跟著走；清除瀏覽器資料也會一起清掉。';
+}
+function persist(){state.updatedAt=Date.now();saveJSON(LS_KEY,state);queueCloud(1500);}
+function queueCloud(ms){if(!cloud.ref)return;clearTimeout(cloud.timer);cloud.timer=setTimeout(flushCloud,ms);}
+async function flushCloud(){
+  if(!cloud.ref) return;
+  if(cloud.writing){cloud.pending=true;return;}
+  cloud.writing=true; setSync('syncing');
+  try{
+    await cloud.ref.set(JSON.parse(JSON.stringify(state)));
+    setSync('cloud');
+  }catch(e){
+    const code=e&&e.code;
+    if(code==='unavailable'){setSync('cloud');setTimeout(()=>queueCloud(0),1500+Math.random()*1500);}
+    else{cloud.ref=null;setSync('local');}
+  }finally{
+    cloud.writing=false;
+    if(cloud.pending){cloud.pending=false;queueCloud(300);}
+  }
+}
+async function initCloud(){
+  setSync('local');
+  if(!window.claude||typeof window.claude.use!=='function') return;
+  try{
+    const [user,db]=await Promise.all([window.claude.use('user'),window.claude.use('db')]);
+    if(!user||!db) return;
+    const uid=await user.id();
+    if(!uid) return;
+    const ref=db.doc('data/users/'+uid+'/progress');
+    setSync('syncing');
+    const snap=await ref.get();
+    cloud.ref=ref;
+    if(snap.exists){
+      const remote=normalize(JSON.parse(JSON.stringify(snap.data())));
+      if((remote.updatedAt||0)>(state.updatedAt||0)){state=remote;saveJSON(LS_KEY,state);renderAll();}
+      else if((state.updatedAt||0)>(remote.updatedAt||0)) queueCloud(0);
+    }else if(state.updatedAt){queueCloud(0);}
+    setSync('cloud');
+  }catch(e){cloud.ref=null;setSync('local');}
+}
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden'&&cloud.ref&&cloud.timer){clearTimeout(cloud.timer);flushCloud();}});
+
+/* ---------------- speech ---------------- */
+// Sources in order: online Google voice (a key is saved and the page may reach Google — never inside
+// Claude, whose sandbox blocks outside requests) → clips embedded in this build → the device's own voice.
+// Watchdog: anything that hasn't started within 5 s is treated as stuck and falls back to the next source.
+const STUCK_MS=5000;
+const IN_CLAUDE=!!(window.claude&&typeof window.claude.use==='function');
+const TTS_STORE='hiragana-helper-tts';
+const tts=Object.assign({key:'',voice:'',rate:0.85},loadJSON(TTS_STORE)||{});
+function saveTts(){saveJSON(TTS_STORE,tts);}
+let AUDIO={};
+try{const el=document.getElementById('audio-data');if(el)AUDIO=JSON.parse(el.textContent);}catch(e){AUDIO={};}
+
+let jaVoice=null, voiceWarned=false, lastUtter=null;
+function voiceScore(v){
+  let s=0;
+  if(/Enhanced|Premium|高品質|拡張|プレミアム/i.test(v.name)) s+=4;
+  if(/O-ren|Kyoko|Nanami|Ayumi|Haruka|Google/i.test(v.name)) s+=2;  // female voices
+  if(/Hattori|Otoya|Ichiro|Keita/i.test(v.name)) s-=5;              // male voices
+  return s;
+}
+function pickVoice(){
+  try{
+    const ja=speechSynthesis.getVoices().filter(v=>/^ja/i.test(v.lang));
+    ja.sort((a,b)=>voiceScore(b)-voiceScore(a));
+    jaVoice=ja[0]||null;
+  }catch(e){jaVoice=null;}
+  renderVoiceStatus();
+}
+if('speechSynthesis' in window){try{speechSynthesis.addEventListener('voiceschanged',pickVoice);}catch(e){}}
+
+// iOS only plays sound from an element that was started inside a tap, so every tap first starts a
+// silent clip on the shared player; the real clip can then play once it arrives from the network.
+let player=null, speakToken=0, silentUrl=null, onlineDownUntil=0;
+function silentWav(){
+  const n=400, b=new Uint8Array(44+n), v=new DataView(b.buffer);
+  const s=(o,t)=>{for(let i=0;i<t.length;i++)b[o+i]=t.charCodeAt(i);};
+  s(0,'RIFF');v.setUint32(4,36+n,true);s(8,'WAVEfmt ');v.setUint32(16,16,true);v.setUint16(20,1,true);v.setUint16(22,1,true);
+  v.setUint32(24,8000,true);v.setUint32(28,8000,true);v.setUint16(32,1,true);v.setUint16(34,8,true);s(36,'data');v.setUint32(40,n,true);
+  b.fill(128,44);
+  return URL.createObjectURL(new Blob([b],{type:'audio/wav'}));
+}
+function primePlayer(){
+  if(!player){player=new Audio();player.preload='auto';}
+  try{if(navigator.audioSession)navigator.audioSession.type='playback';}catch(e){}  // play even with the silent switch on
+  try{if(!silentUrl)silentUrl=silentWav();player.src=silentUrl;const p=player.play();if(p&&p.catch)p.catch(()=>{});}catch(e){}
+}
+const shownOnce=new Set();
+function toastOnce(msg){if(!msg||shownOnce.has(msg))return;shownOnce.add(msg);toast(msg);}
+
+function speak(text){
+  primePlayer();
+  const token=++speakToken;
+  if(tts.key&&!IN_CLAUDE&&Date.now()>onlineDownUntil){speakOnline(text,token);return;}
+  speakLocal(text,token);
+}
+function speakLocal(text,token){
+  if(AUDIO[text]) playSrc(AUDIO[text],text,token,Math.max(0.5,Math.min(1.25,tts.rate/0.85*0.9)));
+  else ttsSpeak(text);
+}
+function playSrc(src,text,token,rate){
+  try{
+    let started=false;
+    player.onplaying=()=>{if(player.currentSrc===src||player.src===src)started=true;};
+    player.pause(); player.defaultPlaybackRate=rate||1; player.src=src; player.playbackRate=rate||1;
+    const p=player.play();
+    if(p&&p.catch) p.catch(()=>{if(token===speakToken) ttsSpeak(text);});
+    setTimeout(()=>{if(token===speakToken&&!started){try{player.pause();}catch(e){}ttsSpeak(text);}},STUCK_MS);
+  }catch(e){ttsSpeak(text);}
+}
+
+/* ---- online voice: Google Cloud Text-to-Speech, called straight from the page with the viewer's own key ---- */
+const ttsMem=new Map();
+function fetchT(url,opts){
+  const c=new AbortController(); const t=setTimeout(()=>c.abort(),STUCK_MS);
+  return fetch(url,Object.assign({},opts,{signal:c.signal})).finally(()=>clearTimeout(t));
+}
+async function apiJSON(res){
+  const data=await res.json().catch(()=>({}));
+  if(!res.ok){const e=new Error((data.error&&data.error.message)||('HTTP '+res.status));e.status=res.status;throw e;}
+  return data;
+}
+async function onlineVoice(){
+  if(tts.voice) return tts.voice;
+  const data=await apiJSON(await fetchT('https://texttospeech.googleapis.com/v1/voices?languageCode=ja-JP&key='+encodeURIComponent(tts.key)));
+  // Chirp 3 HD voices can't change speed, so only Neural2 / WaveNet / Standard female voices qualify.
+  const rank=n=>/Neural2/.test(n)?3:/Wavenet/.test(n)?2:/Standard/.test(n)?1:0;
+  const female=(data.voices||[]).filter(v=>v.ssmlGender==='FEMALE'&&rank(v.name)>0)
+    .sort((a,b)=>rank(b.name)-rank(a.name)||a.name.localeCompare(b.name));
+  if(!female.length){const e=new Error('找不到日語女聲');e.status=404;throw e;}
+  tts.voice=female[0].name; saveTts(); renderVoiceStatus();
+  return tts.voice;
+}
+async function onlineClip(text){
+  const voice=await onlineVoice();
+  const id=voice+'|'+tts.rate+'|'+text;
+  if(ttsMem.has(id)) return ttsMem.get(id);
+  const req=new Request('https://tts-cache.invalid/'+encodeURIComponent(id));
+  let cache=null;
+  try{
+    cache=await caches.open('hiragana-tts-v1');
+    const hit=await cache.match(req);
+    if(hit){const u=URL.createObjectURL(await hit.blob());ttsMem.set(id,u);return u;}
+  }catch(e){cache=null;}
+  const data=await apiJSON(await fetchT('https://texttospeech.googleapis.com/v1/text:synthesize?key='+encodeURIComponent(tts.key),{
+    method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({input:{text},voice:{languageCode:'ja-JP',name:voice},audioConfig:{audioEncoding:'MP3',speakingRate:tts.rate}})}));
+  const bin=atob(data.audioContent||''); const bytes=new Uint8Array(bin.length);
+  for(let i=0;i<bin.length;i++) bytes[i]=bin.charCodeAt(i);
+  const blob=new Blob([bytes],{type:'audio/mpeg'});
+  if(cache) cache.put(req,new Response(blob)).catch(()=>{});
+  const u=URL.createObjectURL(blob); ttsMem.set(id,u); return u;
+}
+function onlineErrorText(err){
+  if(!err||err.name==='AbortError') return '線上語音超過 5 秒沒回應，先改用裝置語音。';
+  if(err.status===400||err.status===403) return '線上語音被拒絕：'+String(err.message).replace(/[。.\s]+$/,'')+'。先改用裝置語音，請到「記憶方法 → 發音設定」檢查密鑰。';
+  if(err.status===429) return '線上語音用量到上限了，先改用裝置語音。';
+  if(err.status) return '線上語音出錯（'+err.status+'），先改用裝置語音。';
+  return '連不上線上語音（可能沒有網路），先改用裝置語音。';
+}
+function speakOnline(text,token){
+  let settled=false;
+  const fallback=msg=>{if(settled)return;settled=true;toastOnce(msg);if(token===speakToken)speakLocal(text,token);};
+  const wd=setTimeout(()=>{onlineDownUntil=Date.now()+60000;fallback(onlineErrorText(null));},STUCK_MS);
+  onlineClip(text).then(url=>{
+    clearTimeout(wd);
+    if(settled||token!==speakToken) return;
+    settled=true; playSrc(url,text,token,1);
+  }).catch(err=>{
+    clearTimeout(wd);
+    if(err&&err.status===400&&tts.voice){tts.voice='';saveTts();}             // voice retired: choose again next time
+    if(err&&(err.status===400||err.status===403)) onlineDownUntil=Infinity;   // bad key: stop until a new key is saved
+    else onlineDownUntil=Date.now()+60000;                                     // offline or stuck: retry in a minute
+    fallback(onlineErrorText(err));
+  });
+}
+function voiceSourceText(){
+  if(tts.key&&!IN_CLAUDE) return '線上 Google 女聲'+(tts.voice?'（'+tts.voice+'）':'');
+  if(Object.keys(AUDIO).length) return '內建錄音';
+  return jaVoice?'裝置語音（'+jaVoice.name+'）':'裝置語音';
+}
+function renderVoiceStatus(){
+  const el=document.getElementById('voice-status'); if(!el) return;
+  let t='目前發音：'+voiceSourceText()+'。';
+  if(IN_CLAUDE) t+='在 Claude 裡打開時不能連線上語音；想用線上女聲，請用 iPhone 的 Safari 打開 GitHub 網址。';
+  else if(!tts.key) t+='貼上 Google Cloud API 密鑰，就會改用線上自然女聲。';
+  el.textContent=t;
+  const rv=document.getElementById('tts-rate-val'); if(rv) rv.textContent=tts.rate.toFixed(2);
+  const k=document.getElementById('tts-key'); if(k) k.placeholder=tts.key?'已儲存密鑰（尾碼 '+tts.key.slice(-4)+'）':'貼上 API 密鑰，例如 AIza…';
+}
+
+function ttsSpeak(text,isRetry){
+  if(!('speechSynthesis' in window)){toast('這個瀏覽器不支援發音');return;}
+  try{
+    const synth=window.speechSynthesis;
+    if(!jaVoice) pickVoice();
+    const u=new SpeechSynthesisUtterance(text);
+    u.lang='ja-JP'; if(jaVoice) u.voice=jaVoice; u.rate=tts.rate;
+    u.onerror=ev=>{if(ev&&(ev.error==='interrupted'||ev.error==='canceled'))return;toast('無法播放發音。請確認裝置有日語語音。');};
+    lastUtter=u; // keep a reference: Chrome can drop an utterance that gets garbage-collected
+    const token=++speakToken; let started=false;
+    u.onstart=()=>{started=true;};
+    const go=()=>{synth.speak(u);if(synth.paused)synth.resume();};
+    if(synth.speaking||synth.pending){synth.cancel();setTimeout(go,60);}else go();
+    // Chrome's speech engine sometimes hangs silently: reset it and retry once, then tell the viewer.
+    setTimeout(()=>{
+      if(token!==speakToken||started) return;
+      try{synth.cancel();}catch(e){}
+      if(!isRetry) ttsSpeak(text,true);
+      else toast('發音卡住了，已自動重置。請再按一次，或確認裝置有日語語音。');
+    },STUCK_MS);
+    if(!jaVoice&&!voiceWarned){
+      const vs=speechSynthesis.getVoices();
+      if(vs.length){voiceWarned=true;toast('找不到日語語音。可以在系統設定加入日語語音（例如 Kyoko）。');}
+    }
+  }catch(e){toast('無法播放發音');}
+}
+
+let toastTimer=null;
+function toast(msg){const t=$('#toast');t.textContent=msg;t.hidden=false;clearTimeout(toastTimer);toastTimer=setTimeout(()=>{t.hidden=true;},2600);}
+
+/* ---------------- helpers ---------------- */
+function sameSound(a,b){return a.r===b.r||a.alts.includes(b.r)||b.alts.includes(a.r);}
+function confusables(it){
+  if(it.type==='basic') return it.cf.map(c=>ITEM[c]).filter(Boolean);
+  if(it.type==='daku'){
+    const out=[]; const off=it.mark==='゜'?2:1;
+    if(it.cons==='b'||it.cons==='p'){const o=ITEM[String.fromCharCode(it.base.charCodeAt(0)+(off===1?2:1))];if(o)out.push(o);}
+    out.push(ITEM[it.base]);
+    (ITEM[it.base].cf||[]).forEach(c=>{const x=ITEM[String.fromCharCode(c.charCodeAt(0)+off)];if(x&&x.type==='daku'&&x.base===c)out.push(x);});
+    return out;
+  }
+  if(it.type==='yoon') return ITEMS.filter(x=>x.type==='yoon'&&x.base===it.base&&x!==it);
+  return [];
+}
+function groupsWith(...ks){return GROUPS.filter(g=>ks.every(k=>g.ks.includes(k)));}
+function examples(it){
+  const list=WORDS.filter(w=>w.k.includes(it.k));
+  list.sort((a,b)=>(Number(b.k.startsWith(it.k))-Number(a.k.startsWith(it.k)))||(a.k.length-b.k.length));
+  return list.slice(0,3);
+}
+function wordFits(w,sets){for(const s of w.sets){if(!sets.includes(s))return false;}return true;}
+function typeLabel(it){return it.type==='basic'?'清音':it.type==='yoon'?'拗音':(it.mark==='゜'?'半濁音':'濁音');}
+function shortTip(it){
+  if(it.type==='basic') return `字源「${it.origin}」。${it.shape}`;
+  if(it.type==='daku') return `${it.base}（${ITEM[it.base].r}）加上 ${it.mark}。${DAKU_NOTES[it.cons]}`;
+  const sm=SMALL_INFO[it.small];
+  return `${it.base}（${ITEM[it.base].r}）＋小 ${it.small}（${sm[1]}）合成一拍 → ${it.r}。`;
+}
+
+/* ---------------- header ---------------- */
+function renderHeader(){
+  const basic=ITEMS.filter(i=>i.type==='basic');
+  const c={ok:0,mid:0,weak:0,new:0};
+  basic.forEach(i=>c[status(i.k)]++);
+  $('#m-ok').textContent=c.ok; $('#m-ok2').textContent=c.ok; $('#m-mid').textContent=c.mid; $('#m-weak').textContent=c.weak;
+  $('#b-ok').style.width=(c.ok/46*100)+'%'; $('#b-mid').style.width=(c.mid/46*100)+'%'; $('#b-weak').style.width=(c.weak/46*100)+'%';
+  const weakAll=ITEMS.filter(i=>status(i.k)==='weak').length;
+  $('#btn-weak').textContent=weakAll?`練待加強的 ${weakAll} 個字`:'練待加強的字';
+  const sel=$('#level');
+  if(!sel.options.length) sel.innerHTML=LEVELS.map((l,i)=>`<option value="${i}">${esc(l.label)}</option>`).join('');
+  sel.value=String(state.level);
+}
+
+/* ---------------- chart ---------------- */
+function cellHTML(it,learned){
+  const st=status(it.k); const later=!learned.includes(it.set);
+  return `<button type="button" class="cell sq st-${st}${later?' later':''}${it.k.length>1?' two':''}" data-open="${it.k}" aria-label="${it.k}，${it.r}，${STATUS_LABEL[st]}"><span class="k">${it.k}</span><span class="ro">${it.r}</span><span class="dot" aria-hidden="true"></span></button>`;
+}
+function renderChart(){
+  const el=$('#chart'); const learned=learnedSets(); let html='';
+  el.classList.toggle('no-ro',!ui.romaji);
+  el.classList.toggle('yoon',ui.chart==='yoon');
+  const soku=ui.chart==='soku';
+  el.hidden=soku; $('#chart-note').hidden=soku;
+  $('#chart-extra').innerHTML=soku?sokuLessonHTML():ui.chart==='yoon'?yoonLessonHTML():'';
+  if(ui.chart==='basic'){
+    html+='<div class="c-head"></div>'+['a','i','u','e','o'].map(v=>`<div class="c-head">${v}</div>`).join('');
+    ROWS.forEach(row=>{html+=`<div class="c-label">${row.label}</div>`;row.ks.forEach(k=>{html+=k?cellHTML(ITEM[k],learned):'<div aria-hidden="true"></div>';});});
+  }else if(ui.chart==='daku'){
+    html+='<div class="c-head"></div>'+['a','i','u','e','o'].map(v=>`<div class="c-head">${v}</div>`).join('');
+    DAKU_ROWS.forEach(row=>{html+=`<div class="c-label">${row.label}</div>`;row.ks.forEach(k=>{html+=cellHTML(ITEM[k],learned);});});
+  }else if(ui.chart==='yoon'){
+    html+='<div class="c-head"></div>'+['ya','yu','yo'].map(v=>`<div class="c-head">${v}</div>`).join('');
+    YOON_ROWS.forEach(([b])=>{html+=`<div class="c-label">${b} 行</div>`;SMALL.forEach(s=>{html+=cellHTML(ITEM[b+s],learned);});});
+  }
+  el.innerHTML=html;
+  $$('[data-chart]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.chart===ui.chart)));
+  $('#show-romaji').checked=ui.romaji;
+}
+function renderOriginStrip(){
+  $('#origin-strip').innerHTML=ITEMS.filter(i=>i.type==='basic').map(i=>`<span><span class="han">${i.origin}</span><span class="kana">${i.k}</span></span>`).join('');
+}
+
+/* ---------------- 促音・拗音 lessons ---------------- */
+function pairHTML(a,b){
+  const one=k=>{const w=WORD[k];return `<div class="pw"><button type="button" class="icon-btn" data-speak="${esc(k)}" aria-label="播放 ${esc(k)} 的發音">${ICON_SPEAK}</button><div><span class="kana">${esc(k)}</span><span class="romaji">${esc(w.r)}</span><span class="m">${esc(w.zh)} · ${esc(w.en)}</span></div></div>`;};
+  return `<div class="pair">${one(a)}<span class="vs">vs</span>${one(b)}</div>`;
+}
+function demoHTML(parts,cap){
+  return `<div class="demo">${parts.map(([ch,small])=>`<div class="sq"><span class="kana${small?' sm':''}">${ch}</span></div>`).join('')}<p class="demo-cap">${cap}</p></div>`;
+}
+function sokuLessonHTML(){
+  return `<div class="lesson-box">
+    <p class="label">促音 っ（sokuon・small tsu）</p>
+    ${demoHTML([['き'],['っ',1],['て']],'きって kitte（郵票）：小 っ 自己佔一格，要寫小，橫寫時放在格子左下方。')}
+    <ul class="plain">
+      <li><b>不發音，停一拍</b>：嘴巴先擺好下一個音的位置，停一下再發出來。きって 是三拍（き・っ・て），きて 只有兩拍，拍手數拍子很有用。</li>
+      <li><b>羅馬字</b>：把下一個字的子音寫兩次，例如 きって kitte、ざっし zasshi、きっぷ kippu。</li>
+      <li><b>例外</b>：下一個字是 ち 時寫成 tch，例如 まっちゃ matcha。</li>
+      <li><b>後面接誰</b>：っ 後面幾乎都是 か・さ・た・ぱ 行的字。</li>
+    </ul>
+  </div>
+  <div class="lesson-box">
+    <p class="label">有沒有 っ，意思完全不同</p>
+    <div class="pairs">${SOKU_PAIRS.map(p=>pairHTML(p[0],p[1])).join('')}</div>
+  </div>
+  <div class="lesson-box">
+    <p class="label">更多促音單字（點一下聽發音）</p>
+    <div class="word-chips">${SOKU_MORE.map(k=>`<button type="button" class="wchip" data-speak="${esc(k)}"><span class="kana">${esc(k)}</span><span class="romaji">${esc(WORD[k].r)}</span><span class="m">${esc(WORD[k].zh)}</span></button>`).join('')}</div>
+    <div><button type="button" class="btn primary" data-drillmode="soku">開始促音特訓</button></div>
+  </div>`;
+}
+function yoonLessonHTML(){
+  return `<div class="lesson-box">
+    <p class="label">拗音（yōon）怎麼讀、怎麼寫</p>
+    ${demoHTML([['き'],['ゃ',1]],'きゃ kya：小 ゃ 自己佔一格，要寫小，橫寫時放在格子左下方。')}
+    <ul class="plain">
+      <li><b>組合</b>：い 段的字（き し ち に ひ み り，加上 ぎ じ び ぴ）＋小 ゃ ゅ ょ，兩個字合成<b>一拍</b>。</li>
+      <li><b>大小不能混</b>：きゃ 是一拍 kya；寫成大字 きや 就變成兩拍 ki-ya。</li>
+      <li><b>羅馬字</b>：しゃ sha、ちゃ cha、じゃ ja，不寫成 shya、chya、jya。</li>
+      <li><b>常跟長音一起出現</b>：きょう kyou、じゅう juu、びょういん byouin。</li>
+    </ul>
+  </div>
+  <div class="lesson-box">
+    <p class="label">大字小字，意思完全不同</p>
+    <div class="pairs">${YOON_PAIRS.map(p=>pairHTML(p[0],p[1])).join('')}</div>
+    <div><button type="button" class="btn primary" data-drillmode="yoon2">開始拗音特訓</button></div>
+  </div>`;
+}
+
+/* ---------------- detail sheet ---------------- */
+let detailSeq=[],detailIdx=0,lastFocus=null;
+function openDetail(k){
+  const it=ITEM[k]; if(!it) return;
+  if($('#overlay').hidden) lastFocus=document.activeElement;
+  detailSeq=ITEMS.filter(x=>x.type===it.type); detailIdx=detailSeq.indexOf(it);
+  renderDetail();
+  $('#overlay').hidden=false; document.documentElement.style.overflow='hidden';
+  const c=$('#sheet [data-close]'); if(c) c.focus();
+}
+function closeDetail(){
+  $('#overlay').hidden=true; document.documentElement.style.overflow='';
+  if(lastFocus&&lastFocus.focus) lastFocus.focus();
+}
+function renderDetail(){
+  const it=detailSeq[detailIdx]; const st=status(it.k);
+  const alts=it.alts.length?`<small>也可以寫 ${it.alts.map(esc).join('、')}</small>`:'';
+  let origin='';
+  if(it.type==='basic'){
+    origin=`<div class="d-origin"><div class="d-pair"><span class="han">${it.origin}</span><span class="arrow">→</span><span class="kana">${it.k}</span></div><div><p class="label">字源・字形記法</p><p>${esc(it.shape)}</p>${it.originNote?`<p class="muted" style="font-size:.85rem">字源「${it.origin}」${esc(it.originNote)}</p>`:''}</div></div>`;
+  }else if(it.type==='daku'){
+    const b=ITEM[it.base];
+    origin=`<div class="d-origin"><div class="d-pair"><span class="kana">${it.base}</span><span class="arrow">＋${it.mark}</span><span class="kana">${it.k}</span></div><div><p class="label">怎麼來的</p><p>${it.base}（${b.r}）加上${it.mark==='゛'?'濁點 ゛（dakuten）':'半濁點 ゜（handakuten）'}，就變成 ${it.r}。${it.base} 的字源是「${b.origin}」。</p></div></div>`;
+  }else{
+    const sm=SMALL_INFO[it.small]; const b=ITEM[it.base];
+    origin=`<div class="d-origin"><div class="d-pair"><span class="kana">${it.base}</span><span class="arrow">＋</span><span class="kana" style="font-size:.7em">${it.small}</span></div><div><p class="label">怎麼組成的</p><p>${it.base}（${b.r}）＋小 ${it.small}（${sm[1]}），兩個字合成一拍，讀 ${it.r}。小字要寫小，橫寫時放在格子左下方；寫成大字 ${it.base}${sm[0]} 就變成兩拍 ${b.r}-${sm[1]}。</p></div></div>`;
+  }
+  const sound=it.type==='basic'?it.sound:it.type==='daku'?DAKU_NOTES[it.cons]:`一拍唸完，不要拆成 ${ITEM[it.base].r} 和 ${SMALL_INFO[it.small][1]} 兩個音。`;
+  const cf=confusables(it);
+  const keys=GROUPS.filter(g=>g.ks.includes(it.k));
+  const cfHTML=cf.length?`<div class="d-sec"><p class="label">容易搞混</p><div class="chips">${cf.map(x=>`<button type="button" class="kchip" data-open="${x.k}"><span class="kana">${x.k}</span><span class="romaji">${x.r}</span></button>`).join('')}</div>${keys.map(g=>`<p class="keyline"><b>分辨</b>　${esc(g.key)}</p>`).join('')}</div>`:'';
+  const ex=examples(it);
+  const exHTML=`<div class="d-sec"><p class="label">例字</p>${ex.length?`<ul class="ex">${ex.map(w=>`<li><div><span class="kana">${esc(w.k)}</span>${w.kanji?`<span class="meta">${esc(w.kanji)}</span>`:''}<div class="meta"><span class="romaji">${esc(w.r)}</span>　${esc(w.zh)}　·　${esc(w.en)}</div></div><button type="button" class="icon-btn" data-speak="${esc(w.k)}" aria-label="播放 ${esc(w.k)} 的發音">${ICON_SPEAK}</button></li>`).join('')}</ul>`:'<p class="muted">這個音在初級單字裡很少見，先認得就好。</p>'}</div>`;
+  const prev=detailIdx>0?detailSeq[detailIdx-1]:null, next=detailIdx<detailSeq.length-1?detailSeq[detailIdx+1]:null;
+  $('#sheet').innerHTML=`
+    <div class="d-head">
+      <div class="d-square sq${it.k.length>1?' two':''}"><span>${it.k}</span></div>
+      <div class="d-meta">
+        <p class="label">${esc(it.row)}・${typeLabel(it)}</p>
+        <h2 id="d-title" class="d-romaji">${esc(it.r)}${alts}</h2>
+        <div class="d-actions"><button type="button" class="btn-sm" data-speak="${it.k}">${ICON_SPEAK}聽發音</button><span class="pill st-${st}">${STATUS_LABEL[st]}</span></div>
+      </div>
+      <button type="button" class="icon-btn" data-close aria-label="關閉">✕</button>
+    </div>
+    ${origin}
+    <div class="d-sec"><p class="label">發音</p><p>${esc(sound)}</p></div>
+    <div class="d-sec"><p class="label">手寫體和印刷體</p><div class="fonts"><figure><span class="hand">${it.k}</span><figcaption>手寫・課本</figcaption></figure><figure><span class="print">${it.k}</span><figcaption>印刷・電腦字型</figcaption></figure></div><p class="muted" style="font-size:.85rem">兩種長相都要認得。考試手寫以課本的寫法為準。</p></div>
+    ${cfHTML}
+    ${exHTML}
+    <div class="d-nav"><button type="button" class="btn" data-nav="-1" ${prev?'':'disabled'}>‹ ${prev?prev.k:''}</button><button type="button" class="btn" data-nav="1" ${next?'':'disabled'}>${next?next.k:''} ›</button></div>`;
+}
+
+/* ---------------- confusables tab ---------------- */
+function renderGroups(){
+  $('#groups').innerHTML=GROUPS.map(g=>`
+    <article class="gcard">
+      <div class="g-glyphs">${g.ks.map(k=>`<button type="button" class="g-k sq" data-open="${k}" aria-label="${k} ${ITEM[k].r}"><span class="kana">${k}</span><span class="ro">${ITEM[k].r}</span></button>`).join('')}</div>
+      ${g.intro?`<p class="g-intro">${esc(g.intro)}</p>`:''}
+      <p class="g-key"><b>一句話</b>${esc(g.key)}</p>
+      <ul class="g-notes">${g.ks.map(k=>`<li><span class="kana">${k}</span><span>${esc(g.notes[k])}</span></li>`).join('')}</ul>
+      <button type="button" class="btn" data-drill="${g.id}">練這一組</button>
+    </article>`).join('');
+  $('#c-soku').innerHTML=SOKU_PAIRS.map(p=>pairHTML(p[0],p[1])).join('');
+  $('#c-yoon').innerHTML=YOON_PAIRS.map(p=>pairHTML(p[0],p[1])).join('');
+  $('#traps').innerHTML=TRAPS.map(([a,t])=>`<div class="trap"><b>${esc(a)}</b><span>${esc(t)}</span></div>`).join('');
+}
+
+/* ---------------- practice ---------------- */
+function prefSets(){return state.prefs.sets&&state.prefs.sets.length?state.prefs.sets:learnedSets();}
+function isWordMode(m){return m==='w2e'||m==='e2w';}
+function isDrillMode(m){return m==='soku'||m==='yoon2';}
+function qKey(q){return (q.it||q.w||q.d).k;}
+function isRight(q,o){return q.d?!!o.ok:o===(q.it||q.w);}
+function drillPool(cfg){
+  let pool=cfg.drillKeys?cfg.drillKeys.map(k=>DRILL_MAP[k]).filter(Boolean):DRILL.filter(d=>d.kind===(cfg.mode==='soku'?'soku':'yoon'));
+  if(cfg.weak) pool=pool.filter(d=>status(d.k,state.dstats)==='weak');
+  return pool;
+}
+function kanaPool(cfg){
+  let pool;
+  if(cfg.keys) pool=cfg.keys.map(k=>ITEM[k]).filter(Boolean);
+  else if(cfg.group){const g=GROUPS.find(x=>x.id===cfg.group);pool=g?g.ks.map(k=>ITEM[k]):[];}
+  else{
+    pool=ITEMS.filter(it=>cfg.sets.includes(it.set));
+    if(cfg.mode==='conf'){const inG=new Set(GROUPS.flatMap(g=>g.ks));pool=pool.filter(it=>inG.has(it.k));}
+  }
+  if(cfg.weak) pool=pool.filter(it=>status(it.k)==='weak');
+  return pool;
+}
+function wordPool(cfg){
+  let pool=cfg.wordKeys?cfg.wordKeys.map(k=>WORD[k]).filter(Boolean):WORDS.filter(w=>wordFits(w,cfg.sets));
+  if(cfg.weak) pool=pool.filter(w=>status(w.k,state.wstats)==='weak');
+  return pool;
+}
+function renderSetup(){
+  const p=state.prefs; const sets=prefSets();
+  $('#p-modes').innerHTML=MODES.map(m=>`<button type="button" class="mode" data-mode="${m.id}" aria-pressed="${p.mode===m.id}"><b>${m.label}</b><span>${m.desc}</span></button>`).join('');
+  $('#p-sets').innerHTML=LEVELS.map(l=>`<button type="button" class="chip" data-set="${l.id}" aria-pressed="${sets.includes(l.id)}">${l.label}</button>`).join('');
+  $$('#p-count [data-count]').forEach(b=>b.setAttribute('aria-pressed',String(Number(b.dataset.count)===p.count)));
+  $('#p-weak').checked=!!p.weak; $('#p-voice').checked=!!p.voice;
+  const cfg={mode:p.mode,sets,weak:p.weak};
+  const note=$('#p-note'); note.classList.remove('warn');
+  if(isDrillMode(p.mode)){
+    const pool=drillPool({mode:p.mode,weak:p.weak}); const name=p.mode==='soku'?'促音':'拗音';
+    note.textContent=pool.length?`這個題型固定練 ${pool.length} 個${name}單字，不看上面的範圍。題目會輪流考：聽音選字、看羅馬字選字、看字選羅馬字。`:`${name}單字裡沒有待加強的，做得好！關掉「只練待加強的」再練。`;
+    if(!pool.length) note.classList.add('warn');
+  }else if(isWordMode(p.mode)){
+    const n=wordPool(cfg).length;
+    note.textContent=n>=4?`這個範圍可以出 ${n} 個單字。`:`這個範圍只有 ${n} 個單字，至少要 4 個。多選幾行，或關掉「只練待加強的」。`;
+    if(n<4) note.classList.add('warn');
+  }else{
+    const pool=kanaPool(cfg); const w=pool.filter(i=>status(i.k)==='weak').length;
+    note.textContent=pool.length?`這個範圍有 ${pool.length} 個假名${w&&!p.weak?`，其中 ${w} 個待加強，會多出幾次`:''}。`:(p.weak?'這個範圍沒有待加強的字，做得好！關掉「只練待加強的」再練。':'請至少選一個範圍。');
+    if(!pool.length) note.classList.add('warn');
+  }
+}
+function pickSeq(pool,count,wf){
+  const base=shuffle(pool.slice()).sort((a,b)=>wf(b)-wf(a));
+  const seq=base.slice(0,count);
+  if(seq.length<count){
+    const bag=[]; pool.forEach(x=>{for(let i=0;i<wf(x);i++)bag.push(x);});
+    while(seq.length<count) seq.push(bag[Math.floor(Math.random()*bag.length)]);
+  }
+  shuffle(seq);
+  for(let i=1;i<seq.length;i++){
+    if(seq[i]===seq[i-1]){
+      for(let j=0;j<seq.length;j++){
+        if(seq[j]!==seq[i]&&seq[j-1]!==seq[i]&&seq[j+1]!==seq[i]&&seq[i-1]!==seq[j]&&seq[i+1]!==seq[j]){[seq[i],seq[j]]=[seq[j],seq[i]];break;}
+      }
+    }
+  }
+  return seq;
+}
+function kanaOptions(it,pool,groupOnly){
+  const out=[it];
+  const add=x=>{if(!x||out.length>=4||out.includes(x)||out.some(o=>sameSound(o,x)))return;out.push(x);};
+  if(groupOnly){shuffle(groupOnly.slice()).forEach(add);}
+  shuffle(confusables(it).slice()).forEach(add);
+  GROUPS.filter(g=>g.ks.includes(it.k)).forEach(g=>shuffle(g.ks.slice()).forEach(k=>add(ITEM[k])));
+  shuffle(pool.slice()).forEach(add);
+  shuffle(ITEMS.filter(x=>x.type===it.type)).forEach(add);
+  return shuffle(out);
+}
+function wordOptions(w,pool){
+  const out=[w];
+  const add=x=>{if(out.length>=4||out.includes(x)||out.some(o=>o.en===x.en||o.k===x.k))return;out.push(x);};
+  shuffle(pool.slice()).forEach(add); shuffle(WORDS.slice()).forEach(add);
+  return shuffle(out);
+}
+function buildQuestions(cfg){
+  if(isDrillMode(cfg.mode)){
+    const pool=drillPool(cfg);
+    if(!pool.length){toast(cfg.weak?'目前沒有待加強的單字':'沒有可以練的單字');return null;}
+    const kinds=['dlisten','dr2k','dk2r'];
+    return pickSeq(pool,cfg.count,d=>weight(status(d.k,state.dstats))).map((d,i)=>({m:kinds[i%3],d,
+      opts:shuffle([{k:d.k,r:d.r,ok:true}].concat(d.alts.map(([k,r])=>({k,r,ok:false}))))}));
+  }
+  if(isWordMode(cfg.mode)){
+    const pool=wordPool(cfg);
+    if(cfg.wordKeys?!pool.length:pool.length<4){toast('這個範圍的單字不到 4 個，請多選幾行');return null;}
+    const optPool=cfg.wordKeys?WORDS:pool;
+    return pickSeq(pool,cfg.count,w=>weight(status(w.k,state.wstats))).map(w=>({m:cfg.mode,w,opts:wordOptions(w,optPool)}));
+  }
+  const pool=kanaPool(cfg);
+  if(!pool.length){toast(cfg.weak?'目前沒有待加強的字':'這個範圍沒有字可以練');return null;}
+  const grp=cfg.group?pool:null;
+  return pickSeq(pool,cfg.count,it=>weight(status(it.k))).map((it,i)=>{
+    let m=cfg.mode;
+    if(m==='conf'||cfg.group) m=i%2?'k2r':'r2k';
+    if(m==='r2k'&&(it.k==='ぢ'||it.k==='づ')) m='k2r';
+    return m==='type'?{m,it}:{m,it,opts:kanaOptions(it,pool,grp)};
+  });
+}
+let quiz=null, autoTimer=null;
+function startQuiz(cfg){
+  const qs=buildQuestions(cfg); if(!qs) return;
+  quiz={cfg,qs,i:0,score:0,wrong:[],answered:false};
+  showTab('practice');
+  $('#p-setup').hidden=true; $('#p-result').hidden=true; $('#p-run').hidden=false;
+  renderQ();
+}
+function renderQ(){
+  clearTimeout(autoTimer);
+  const q=quiz.qs[quiz.i]; quiz.answered=false;
+  $('#q-count').textContent=`${quiz.i+1} / ${quiz.qs.length}`;
+  $('#q-bar').style.width=(quiz.i/quiz.qs.length*100)+'%';
+  const ask=$('#q-ask'),pr=$('#q-prompt'),opts=$('#q-opts'),form=$('#q-form');
+  $('#q-fb').hidden=true; $('#q-next').hidden=true; form.hidden=true; opts.hidden=false;
+  pr.className='q-prompt';
+  const num=i=>`<span class="n">${i+1}</span>`;
+  opts.className='q-opts'+(q.opts&&q.opts.length===3?' three':'');
+  if(q.m==='dlisten'){
+    ask.textContent='聽聽看，是哪一個？';
+    pr.innerHTML=`<button type="button" class="play-big" data-speak="${esc(q.d.k)}">${ICON_SPEAK}<span>播放</span></button>`;
+    opts.innerHTML=q.opts.map((o,i)=>`<button type="button" class="opt o-word" data-opt="${i}">${num(i)}${esc(o.k)}</button>`).join('');
+  }else if(q.m==='dr2k'){
+    ask.textContent='哪一個是這個讀音？';
+    pr.innerHTML=`<span class="romaji">${esc(q.d.r)}</span>`;
+    opts.innerHTML=q.opts.map((o,i)=>`<button type="button" class="opt o-word" data-opt="${i}">${num(i)}${esc(o.k)}</button>`).join('');
+  }else if(q.m==='dk2r'){
+    ask.textContent='這個字的羅馬字是？';
+    pr.className='q-prompt word';
+    pr.innerHTML=`<span class="kana">${esc(q.d.k)}</span>`;
+    opts.innerHTML=q.opts.map((o,i)=>`<button type="button" class="opt o-ro" data-opt="${i}">${num(i)}${esc(o.r)}</button>`).join('');
+  }else if(q.m==='k2r'||q.m==='type'){
+    ask.textContent=q.m==='type'?'打出這個字的羅馬字':'這個字怎麼唸？';
+    pr.className='q-prompt is-kana sq'+(q.it.k.length>1?' two':'');
+    pr.innerHTML=`<span class="kana">${q.it.k}</span>`;
+    if(q.m==='k2r') opts.innerHTML=q.opts.map((o,i)=>`<button type="button" class="opt o-ro" data-opt="${i}">${num(i)}${esc(o.r)}</button>`).join('');
+  }else if(q.m==='r2k'){
+    ask.textContent='哪一個是這個音？';
+    pr.innerHTML=`<span class="romaji">${esc(q.it.r)}</span>`;
+    opts.innerHTML=q.opts.map((o,i)=>`<button type="button" class="opt o-kana" data-opt="${i}">${num(i)}${o.k}</button>`).join('');
+  }else if(q.m==='w2e'){
+    ask.textContent='這個單字的英文意思是？';
+    pr.className='q-prompt word';
+    pr.innerHTML=`<span class="kana">${esc(q.w.k)}</span>`;
+    opts.innerHTML=q.opts.map((o,i)=>`<button type="button" class="opt o-en" data-opt="${i}">${num(i)}${esc(o.en)}</button>`).join('');
+  }else if(q.m==='e2w'){
+    ask.textContent='這個英文是哪個日文單字？';
+    pr.innerHTML=`<span class="en">${esc(q.w.en)}</span>`;
+    opts.innerHTML=q.opts.map((o,i)=>`<button type="button" class="opt o-word" data-opt="${i}">${num(i)}${esc(o.k)}</button>`).join('');
+  }
+  if(q.m==='type'){
+    opts.hidden=true; opts.innerHTML=''; form.hidden=false;
+    const inp=$('#q-input'); inp.value=''; inp.disabled=false; inp.focus();
+  }
+}
+function answerOpt(i){
+  if(!quiz||quiz.answered) return;
+  const q=quiz.qs[quiz.i]; const chosen=q.opts[i]; if(!chosen) return;
+  finish(q,isRight(q,chosen),chosen,i);
+}
+function answerTyped(text){
+  if(!quiz||quiz.answered) return;
+  const q=quiz.qs[quiz.i]; const t=text.trim().toLowerCase().replace(/\s+/g,'');
+  if(!t){$('#q-input').focus();return;}
+  finish(q,[q.it.r,...q.it.alts].includes(t),t,-1);
+}
+function finish(q,ok,chosen,idx){
+  quiz.answered=true;
+  const target=q.it||q.w||q.d;
+  if(q.it) record(q.it.k,ok,state.stats); else if(q.d) record(q.d.k,ok,state.dstats); else record(q.w.k,ok,state.wstats);
+  if(ok) quiz.score++; else quiz.wrong.push({q,chosen});
+  if(q.opts){
+    $$('#q-opts .opt').forEach((b,j)=>{
+      b.disabled=true; const o=q.opts[j];
+      if(isRight(q,o)){b.classList.add('right');if(j===idx)b.insertAdjacentHTML('beforeend','<span class="mk" aria-hidden="true">○</span>');}
+      else if(j===idx){b.classList.add('wrong');b.insertAdjacentHTML('beforeend','<span class="mk" aria-hidden="true">×</span>');}
+    });
+  }else{$('#q-input').disabled=true;}
+  const fb=$('#q-fb'); fb.className='q-fb '+(ok?'ok':'no'); fb.hidden=false;
+  let body='';
+  if(q.it){
+    const it=q.it;
+    body=`<p><span class="kana">${it.k}</span> ＝ <span class="romaji">${esc(it.r)}</span>${it.alts.length?`（也可寫 ${it.alts.map(esc).join('、')}）`:''}</p>`;
+    if(!ok){
+      body+=`<p>${esc(shortTip(it))}</p>`;
+      if(typeof chosen==='object'&&chosen.k){
+        body+=`<p>你選的 <span class="kana">${chosen.k}</span> 是 ${esc(chosen.r)}。</p>`;
+        groupsWith(it.k,chosen.k).forEach(g=>{body+=`<p><b>分辨：</b>${esc(g.key)}</p>`;});
+      }else if(typeof chosen==='string'){
+        body+=`<p>你打的是「${esc(chosen)}」。</p>`;
+      }
+    }
+  }else if(q.d){
+    const d=q.d, w=d.w;
+    body=`<p><span class="kana">${esc(d.k)}</span>${w.kanji?`（${esc(w.kanji)}）`:''}　<span class="romaji">${esc(d.r)}</span>　${esc(w.zh)} · ${esc(w.en)}</p>`;
+    if(!ok){
+      body+=`<p>${d.kind==='soku'?'小 っ 是停一拍，羅馬字把下一個子音寫兩次。':'小 ゃ ゅ ょ 跟前一個字合成一拍；寫成大字就變成兩拍。'}</p>`;
+      if(chosen&&chosen.k){const cw=WORD[chosen.k];body+=`<p>你選的 <span class="kana">${esc(chosen.k)}</span> 讀 ${esc(chosen.r)}${cw?`，意思是「${esc(cw.zh)}」`:'，不是常用的字'}。</p>`;}
+    }
+  }else{
+    const w=q.w;
+    body=`<p><span class="kana">${esc(w.k)}</span>${w.kanji?`（${esc(w.kanji)}）`:''}　<span class="romaji">${esc(w.r)}</span></p><p>${esc(w.zh)}　·　${esc(w.en)}</p>`;
+    if(!ok&&chosen&&chosen.k) body+=`<p>你選的 <span class="kana">${esc(chosen.k)}</span> 是「${esc(chosen.zh)} · ${esc(chosen.en)}」。</p>`;
+  }
+  fb.innerHTML=`<p class="head">${ok?'○ 答對了':'× 再看一次'}</p>${body}`;
+  if(state.prefs.voice) speak(target.k);
+  const next=$('#q-next'); next.hidden=false; next.textContent=quiz.i===quiz.qs.length-1?'看結果':'下一題'; next.focus();
+  renderHeader();
+  if(ok&&q.opts) autoTimer=setTimeout(nextQ,state.prefs.voice?1400:850);
+}
+function nextQ(){
+  clearTimeout(autoTimer);
+  if(!quiz||!quiz.answered) return;
+  quiz.i++;
+  if(quiz.i>=quiz.qs.length) showResult(); else renderQ();
+}
+function showResult(){
+  const n=quiz.qs.length, s=quiz.score;
+  $('#p-run').hidden=true; const r=$('#p-result'); r.hidden=false;
+  const pct=s/n;
+  const msg=pct===1?'全對！這個範圍可以往下一行前進了。':pct>=.8?'很穩了，答錯的再看一次記法。':pct>=.5?'有一半以上記住了。先看下面答錯的字，再練一次。':'這個範圍還不熟，先回五十音表看字源和記法，再來練。';
+  const seen=new Set(); const wrongs=quiz.wrong.filter(x=>{const k=qKey(x.q);if(seen.has(k))return false;seen.add(k);return true;});
+  const list=wrongs.map(({q})=>{
+    if(q.it) return `<li><span class="kana">${q.it.k}</span><div><p><b class="romaji">${esc(q.it.r)}</b>　${esc(shortTip(q.it))}</p></div></li>`;
+    if(q.d) return `<li><span class="kana" style="font-size:1.3rem">${esc(q.d.k)}</span><div><p><b class="romaji">${esc(q.d.r)}</b>　${esc(q.d.w.zh)} · ${esc(q.d.w.en)}</p></div></li>`;
+    return `<li><span class="kana" style="font-size:1.3rem">${esc(q.w.k)}</span><div><p><b class="romaji">${esc(q.w.r)}</b>　${esc(q.w.zh)} · ${esc(q.w.en)}</p></div></li>`;
+  }).join('');
+  r.innerHTML=`
+    <div class="res-card">
+      <p class="label">這一回的成績</p>
+      <p class="res-score"><b>${s}</b> / ${n}</p>
+      <p>${msg}</p>
+      <div class="row-btns">
+        ${wrongs.length?'<button type="button" class="btn primary" data-res="wrong">只練答錯的</button>':''}
+        <button type="button" class="btn${wrongs.length?'':' primary'}" data-res="again">同樣設定再一次</button>
+        <button type="button" class="btn" data-res="setup">換題型或範圍</button>
+      </div>
+    </div>
+    ${wrongs.length?`<h2>這次答錯的</h2><ul class="res-list">${list}</ul>`:''}`;
+  quiz.wrongKeys=wrongs.map(x=>qKey(x.q));
+  quiz.wrongKind=wrongs.length?(wrongs[0].q.it?'kana':wrongs[0].q.d?'drill':'word'):'kana';
+  renderChart();
+}
+function backToSetup(){
+  clearTimeout(autoTimer); quiz=null;
+  $('#p-run').hidden=true; $('#p-result').hidden=true; $('#p-setup').hidden=false;
+  renderSetup(); renderChart();
+}
+function startFromPrefs(){
+  const p=state.prefs;
+  startQuiz({mode:p.mode,sets:prefSets(),weak:p.weak,count:p.count});
+}
+
+/* ---------------- vocab ---------------- */
+function renderVocab(){
+  $('#v-cats').innerHTML=CATS.map(([id,l])=>`<button type="button" class="chip" data-cat="${id}" aria-pressed="${ui.cat===id}">${l}</button>`).join('');
+  $('#v-learned').checked=!!ui.learned; $('#v-cover').checked=!!ui.cover;
+  const q=($('#v-search').value||'').trim().toLowerCase();
+  const learned=learnedSets();
+  const list=WORDS.filter(w=>(ui.cat==='all'||w.cat===ui.cat)&&(!ui.learned||wordFits(w,learned))&&(!q||[w.k,w.kanji,w.r,w.zh,w.en].some(x=>x&&x.toLowerCase().includes(q))));
+  $('#v-count').textContent=`${list.length} 個${ui.cat==='all'?'':'「'+CAT_LABEL[ui.cat]+'」'}單字${ui.learned?'（只用到你已學的假名）':''}`;
+  const vl=$('#vlist'); vl.classList.toggle('cover',!!ui.cover);
+  vl.innerHTML=list.length?list.map(w=>{
+    const mean=`<span class="zh">${esc(w.zh)}</span><span class="en">${esc(w.en)}</span>`;
+    return `<div class="vrow" data-word="${esc(w.k)}">
+      <div class="v-jp"><span class="kana">${esc(w.k)}</span>${w.kanji?`<span class="kanji">${esc(w.kanji)}</span>`:''}<span class="ro">${esc(w.r)}</span></div>
+      ${ui.cover?`<button type="button" class="v-mean" data-reveal aria-label="顯示 ${esc(w.k)} 的意思">${mean}</button>`:`<div class="v-mean">${mean}</div>`}
+      <button type="button" class="icon-btn" data-speak="${esc(w.k)}" aria-label="播放 ${esc(w.k)} 的發音">${ICON_SPEAK}</button>
+    </div>`;}).join(''):'<p class="muted" style="padding:16px 4px">沒有符合的單字。換個分類，或關掉「只顯示用到已學假名的」。</p>';
+}
+
+/* ---------------- tabs & global ---------------- */
+const TABS=['chart','confuse','practice','vocab','tips'];
+function showTab(id){
+  if(!TABS.includes(id)) id='chart';
+  ui.tab=id; saveUI();
+  $$('[data-tab]').forEach(b=>b.setAttribute('aria-selected',String(b.dataset.tab===id)));
+  TABS.forEach(t=>{$('#tab-'+t).hidden=t!==id;});
+}
+function renderAll(){renderHeader();renderChart();renderSetup();renderVocab();}
+
+document.addEventListener('click',e=>{
+  const t=e.target;
+  if(t.id==='overlay'){closeDetail();return;}
+  const el=t.closest('button,[data-open]'); if(!el) return;
+  const d=el.dataset;
+  if(d.speak!==undefined&&d.speak!==''){speak(d.speak);return;}
+  if(d.open){openDetail(d.open);return;}
+  if(el.hasAttribute('data-close')){closeDetail();return;}
+  if(d.nav){const n=detailIdx+Number(d.nav);if(n>=0&&n<detailSeq.length){detailIdx=n;renderDetail();}return;}
+  if(d.tab){showTab(d.tab);return;}
+  if(d.chart){ui.chart=d.chart;saveUI();renderChart();return;}
+  if(d.goto){showTab('tips');const t=document.getElementById(d.goto);if(t)t.scrollIntoView({block:'start'});return;}
+  if(d.drillmode){startQuiz({mode:d.drillmode,sets:[],weak:false,count:15});return;}
+  if(d.drill){startQuiz({mode:'conf',group:d.drill,sets:[],weak:false,count:Math.max(10,Math.min(20,GROUPS.find(g=>g.id===d.drill).ks.length*4))});return;}
+  if(d.mode){state.prefs.mode=d.mode;persist();renderSetup();return;}
+  if(d.set){let s=prefSets().slice();s=s.includes(d.set)?s.filter(x=>x!==d.set):s.concat(d.set);state.prefs.sets=LEVELS.map(l=>l.id).filter(id=>s.includes(id));persist();renderSetup();return;}
+  if(d.preset){state.prefs.sets=d.preset==='learned'?null:d.preset==='basic'?BASIC_SETS.slice():LEVELS.map(l=>l.id);persist();renderSetup();return;}
+  if(d.count){state.prefs.count=Number(d.count);persist();renderSetup();return;}
+  if(d.opt!==undefined){answerOpt(Number(d.opt));return;}
+  if(d.cat){ui.cat=d.cat;saveUI();renderVocab();return;}
+  if(el.hasAttribute('data-reveal')){el.closest('.vrow').classList.toggle('open');return;}
+  if(d.res){
+    if(d.res==='setup'){backToSetup();return;}
+    if(d.res==='again'){startQuiz(quiz.cfg);return;}
+    if(d.res==='wrong'){
+      const keys=quiz.wrongKeys; const base=quiz.cfg;
+      const count=Math.max(keys.length*2,6);
+      const kind=quiz.wrongKind;
+      startQuiz(kind==='word'?{mode:base.mode,wordKeys:keys,sets:[],count}
+        :kind==='drill'?{mode:base.mode,drillKeys:keys,sets:[],count}
+        :{mode:base.group?'conf':base.mode,keys,sets:[],count});
+      return;
+    }
+  }
+});
+$('#q-next').addEventListener('click',nextQ);
+$('#q-quit').addEventListener('click',()=>{
+  if(!quiz){backToSetup();return;}
+  const done=quiz.i+(quiz.answered?1:0);
+  if(!done){backToSetup();return;}
+  clearTimeout(autoTimer); quiz.qs=quiz.qs.slice(0,done); showResult();
+});
+$('#q-form').addEventListener('submit',e=>{e.preventDefault();answerTyped($('#q-input').value);});
+$('#p-start').addEventListener('click',startFromPrefs);
+$('#p-weak').addEventListener('change',e=>{state.prefs.weak=e.target.checked;persist();renderSetup();});
+$('#p-voice').addEventListener('change',e=>{state.prefs.voice=e.target.checked;persist();});
+$('#show-romaji').addEventListener('change',e=>{ui.romaji=e.target.checked;saveUI();renderChart();});
+$('#level').addEventListener('change',e=>{state.level=Number(e.target.value);state.prefs.sets=null;persist();renderAll();toast('已更新：目前學到 '+LEVELS[state.level].label);});
+$('#btn-weak').addEventListener('click',()=>{startQuiz({mode:'k2r',sets:LEVELS.map(l=>l.id),weak:true,count:20});});
+$('#v-learned').addEventListener('change',e=>{ui.learned=e.target.checked;saveUI();renderVocab();});
+$('#v-cover').addEventListener('change',e=>{ui.cover=e.target.checked;saveUI();renderVocab();});
+$('#v-search').addEventListener('input',renderVocab);
+$('#tts-rate').value=String(tts.rate);
+$('#tts-rate').addEventListener('input',e=>{tts.rate=Number(e.target.value);saveTts();renderVoiceStatus();});
+$('#tts-save').addEventListener('click',()=>{
+  const v=$('#tts-key').value.trim();
+  if(!v){toast('請先貼上密鑰');return;}
+  tts.key=v; tts.voice=''; onlineDownUntil=0; shownOnce.clear(); saveTts();
+  $('#tts-key').value=''; renderVoiceStatus();
+  toast(IN_CLAUDE?'已儲存。在 Claude 裡不能連線上語音，請在 Safari 打開 GitHub 網址使用。':'已儲存，按「測試發音」試試看');
+});
+$('#tts-clear').addEventListener('click',()=>{tts.key='';tts.voice='';saveTts();renderVoiceStatus();toast('已清除密鑰，改用裝置語音');});
+let resetArmed=null;
+$('#btn-reset').addEventListener('click',e=>{
+  const b=e.currentTarget;
+  if(!resetArmed){b.textContent='再按一次，確定清除';resetArmed=setTimeout(()=>{resetArmed=null;b.textContent='清除所有練習紀錄';},4000);return;}
+  clearTimeout(resetArmed);resetArmed=null;b.textContent='清除所有練習紀錄';
+  state.stats={};state.wstats={};state.dstats={};persist();renderAll();toast('練習紀錄已清除');
+});
+document.addEventListener('keydown',e=>{
+  if(!$('#overlay').hidden){
+    if(e.key==='Escape'){closeDetail();return;}
+    if(e.key==='ArrowRight'||e.key==='ArrowLeft'){const n=detailIdx+(e.key==='ArrowRight'?1:-1);if(n>=0&&n<detailSeq.length){detailIdx=n;renderDetail();}return;}
+    return;
+  }
+  if(ui.tab!=='practice'||!quiz||$('#p-run').hidden) return;
+  if(!quiz.answered&&/^[1-4]$/.test(e.key)&&document.activeElement!==$('#q-input')){e.preventDefault();answerOpt(Number(e.key)-1);return;}
+  if(quiz.answered&&e.key==='Enter'){e.preventDefault();nextQ();}
+});
+
+/* ---------------- boot ---------------- */
+if('speechSynthesis' in window) pickVoice(); else renderVoiceStatus();
+renderOriginStrip();
+renderGroups();
+renderAll();
+const hash=(location.hash||'').replace('#','');
+showTab(TABS.includes(hash)?hash:ui.tab);
+initCloud();
+})();
+</script>
+
+</body>
+</html>
