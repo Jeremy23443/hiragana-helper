@@ -320,7 +320,9 @@ td .kana{font-size:1.05rem}
 .danger{color:var(--shu);border-color:var(--shu)}
 
 /* 發音設定 */
-#voice-settings{scroll-margin-top:64px}
+#voice-settings,#progress-backup{scroll-margin-top:64px}
+.bk-text{font-family:var(--f-mono);font-size:16px;line-height:1.4;color:var(--ink);background:var(--paper);border:1px solid var(--rule);border-radius:10px;padding:8px 12px;width:100%;min-width:0;resize:vertical;overflow-wrap:anywhere}
+label.btn{cursor:pointer}
 .settings{display:grid;gap:12px;background:var(--sheet);border:1px solid var(--rule);border-radius:14px;padding:16px;max-width:640px}
 .set-row{display:grid;grid-template-columns:8rem minmax(0,1fr) 3rem;gap:10px;align-items:center}
 .set-row label{font-weight:600;font-size:.92rem}
@@ -665,9 +667,24 @@ td .kana{font-size:1.05rem}
         </details>
       </div>
 
-      <div class="block">
+      <div class="block" id="progress-backup">
         <h2>練習紀錄</h2>
         <p class="muted" id="sync-detail"></p>
+        <div class="settings">
+          <p class="label">備份：換裝置或怕資料被清掉時用</p>
+          <div class="row-btns left">
+            <button type="button" class="btn primary" id="bk-export">產生備份碼並複製</button>
+            <button type="button" class="btn" id="bk-download" hidden>下載備份檔</button>
+          </div>
+          <textarea id="bk-code" class="bk-text" rows="3" readonly hidden aria-label="備份碼"></textarea>
+          <p class="label">還原：和這台裝置的紀錄合併，不會刪掉任何紀錄</p>
+          <textarea id="bk-input" class="bk-text" rows="3" placeholder="貼上備份碼（HIRA1: 開頭）" aria-label="貼上備份碼"></textarea>
+          <div class="row-btns left">
+            <button type="button" class="btn" id="bk-import">還原貼上的備份碼</button>
+            <label class="btn" for="bk-file">選擇備份檔</label>
+            <input type="file" id="bk-file" accept=".txt,text/plain" hidden>
+          </div>
+        </div>
         <div><button class="btn danger" type="button" id="btn-reset">清除所有練習紀錄</button></div>
       </div>
     </section>
@@ -987,7 +1004,7 @@ function setSync(mode){
     ?'進度存在你的帳號裡，只有你自己看得到。'
     :inClaude
       ?'目前進度只存在這個瀏覽器。用 Claude 帳號登入開啟這個頁面，就會自動存到帳號，手機和電腦都能接著練。'
-      :'進度存在這個瀏覽器裡。換手機或換瀏覽器不會跟著走；清除瀏覽器資料也會一起清掉。';
+      :'進度自動存在這台裝置的瀏覽器裡，每個人各存各的，不用註冊。換手機或換瀏覽器不會跟著走，可以用下面的備份碼搬過去。iPhone 建議從主畫面圖示打開：用 Safari 的話，如果連續 7 天使用 Safari 都沒打開這個網站，資料可能會被自動清掉。';
 }
 function persist(){state.updatedAt=Date.now();saveJSON(LS_KEY,state);queueCloud(1500);}
 function queueCloud(ms){if(!cloud.ref)return;clearTimeout(cloud.timer);cloud.timer=setTimeout(flushCloud,ms);}
@@ -1762,6 +1779,56 @@ document.addEventListener('keydown',e=>{
   if(!quiz.answered&&/^[1-4]$/.test(e.key)&&document.activeElement!==$('#q-input')){e.preventDefault();answerOpt(Number(e.key)-1);return;}
   if(quiz.answered&&e.key==='Enter'){e.preventDefault();nextQ();}
 });
+
+/* ---------------- backup / restore ---------------- */
+// A backup code is "HIRA1:" + base64 of the progress JSON (UTF-8, because the keys are kana).
+// Restoring merges per item and keeps whichever record is newer, so nothing is ever deleted.
+function b64encodeUtf8(str){const b=new TextEncoder().encode(str);let s='';for(let i=0;i<b.length;i++)s+=String.fromCharCode(b[i]);return btoa(s);}
+function b64decodeUtf8(b64){const s=atob(b64);const b=new Uint8Array(s.length);for(let i=0;i<s.length;i++)b[i]=s.charCodeAt(i);return new TextDecoder().decode(b);}
+function backupCode(){
+  return 'HIRA1:'+b64encodeUtf8(JSON.stringify({v:1,level:state.level,stats:state.stats,wstats:state.wstats,dstats:state.dstats,prefs:state.prefs,updatedAt:state.updatedAt}));
+}
+function mergeBackup(text){
+  const m=String(text||'').match(/HIRA1:([A-Za-z0-9+/=\s]+)/);
+  if(!m) throw new Error('找不到 HIRA1: 開頭的備份碼');
+  let inc;
+  try{inc=normalize(JSON.parse(b64decodeUtf8(m[1].replace(/\s+/g,''))));}catch(e){throw new Error('備份碼不完整');}
+  let n=0;
+  ['stats','wstats','dstats'].forEach(bag=>{
+    Object.entries(inc[bag]).forEach(([k,v])=>{
+      if(!v||typeof v!=='object') return;
+      const rec={c:+v.c||0,w:+v.w||0,s:+v.s||0,t:+v.t||0}; const cur=state[bag][k];
+      if(!cur||rec.t>(cur.t||0)){state[bag][k]=rec;n++;}
+    });
+  });
+  if((inc.updatedAt||0)>(state.updatedAt||0)){state.level=inc.level;state.prefs=inc.prefs;}
+  persist(); renderAll();
+  return n;
+}
+function restoreFrom(text){
+  try{const n=mergeBackup(text);toast(n?`已還原：合併了 ${n} 筆紀錄`:'已還原：這台裝置的紀錄已經是最新的');return true;}
+  catch(e){toast('還原失敗：'+e.message+'。請確認貼上的是完整的備份碼。');return false;}
+}
+$('#bk-download').hidden=IN_CLAUDE;   // Claude's sandbox blocks downloads; the copyable code works everywhere
+$('#bk-export').addEventListener('click',()=>{
+  const code=backupCode(), ta=$('#bk-code'); ta.value=code; ta.hidden=false;
+  const fail=()=>{ta.focus();ta.select();toast('請長按選取上面的備份碼，再按「拷貝」。');};
+  try{navigator.clipboard.writeText(code).then(()=>toast('備份碼已複製。貼到備忘錄或傳給自己，換裝置時貼回來。'),fail);}catch(e){fail();}
+});
+$('#bk-download').addEventListener('click',()=>{
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([backupCode()],{type:'text/plain'}));
+  a.download='平假名小助手-備份-'+new Date().toISOString().slice(0,10)+'.txt';
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(()=>URL.revokeObjectURL(a.href),2000);
+});
+$('#bk-import').addEventListener('click',()=>{if(restoreFrom($('#bk-input').value))$('#bk-input').value='';});
+$('#bk-file').addEventListener('change',e=>{
+  const f=e.target.files&&e.target.files[0]; if(!f) return;
+  f.text().then(restoreFrom).catch(()=>toast('讀不到這個檔案')).finally(()=>{e.target.value='';});
+});
+// Ask the browser to keep this site's data instead of clearing it under storage pressure.
+if(!IN_CLAUDE){try{if(navigator.storage&&navigator.storage.persist)navigator.storage.persist().catch(()=>{});}catch(e){}}
 
 /* ---------------- boot ---------------- */
 if('speechSynthesis' in window) pickVoice(); else renderVoiceStatus();
