@@ -956,19 +956,19 @@ const md=k=>{const d=parseDay(k);return `${d.getMonth()+1}/${d.getDate()}（${WD
 
 /* ================= stages ================= */
 const STAGES=[
-  {id:'k1',date:'2026-11-07',kind:'learn',lesson:'kana',chars:K_BATCH1,title:'片假名第 1 批（23 字）',what:'形狀像平假名的字，和直接取漢字部件的字',ids:()=>K1_IDS},
-  {id:'k2',date:'2026-11-08',kind:'learn',lesson:'kana2',chars:K2_CHARS,title:'片假名第 2 批（23 字）',what:'易混字 シツ、ソン、クタケ…，加上片假名的濁音、小字和 ー',ids:()=>K2_IDS},
-  {id:'kwA',date:'2026-11-08',kind:'learn',lesson:'words',title:'片假名詞 A',what:`${KW_A.length} 個詞，只用到第 1 批的字`,ids:()=>KW_A},
-  {id:'rules',date:'2026-11-09',kind:'learn',lesson:'rules',title:'拗音・促音・長音的規則',what:`先讀規則，再看羅馬字寫 ${RULE_IDS.length} 個詞`,ids:()=>RULE_IDS},
-  {id:'kwB',date:'2026-11-09',kind:'learn',lesson:'words',title:'片假名詞 B',what:`${KW_B.length} 個詞，沒有拗音`,ids:()=>KW_B},
-  {id:'hcheck',date:'2026-11-10',kind:'sheet',title:'平假名全檢',what:`看羅馬字寫出清音和濁音 ${H_KANA.length} 個字，找出模糊的`,ids:()=>H_KANA},
-  {id:'kwC',date:'2026-11-10',kind:'learn',lesson:'words',title:'片假名詞 C',what:`${KW_C.length} 個詞，比較長，包含拗音`,ids:()=>KW_C},
-  {id:'hwA',date:'2026-11-11',kind:'learn',lesson:'words',title:'平假名詞 A',what:`${HW.A.length} 個詞，沒有拗音、促音、長音`,ids:()=>HW.A},
-  {id:'hwB',date:'2026-11-11',kind:'learn',lesson:'words',title:'平假名詞 B',what:`${HW.B.length} 個有促音或長音的詞`,ids:()=>HW.B},
-  {id:'hwC',date:'2026-11-12',kind:'learn',lesson:'words',title:'平假名詞 C',what:`${HW.C.length} 個有拗音的詞`,ids:()=>HW.C},
-  {id:'scr',date:'2026-11-12',kind:'scr',title:'拼字練習 20 題',what:'照考卷第③題：打亂的假名加干擾字',ids:()=>shuffle(W.h.slice()).slice(0,10).concat(shuffle(W.k.slice()).slice(0,10))},
-  {id:'mock1',date:'2026-11-13',kind:'mock',title:'模擬考 1',what:'30 題照考卷格式，目標 24 分以上',ids:()=>[]},
-  {id:'mock2',date:'2026-11-14',kind:'mock',title:'模擬考 2（用紙筆）',what:'這次一定用紙寫，目標 27 分以上',ids:()=>[]},
+  {id:'k1',date:'2026-11-10',kind:'learn',lesson:'kana',chars:K_BATCH1,title:'片假名第 1 批（23 字）',what:'形狀像平假名的字，和直接取漢字部件的字',ids:()=>K1_IDS},
+  {id:'k2',date:'2026-11-10',kind:'learn',lesson:'kana2',chars:K2_CHARS,title:'片假名第 2 批（23 字）',what:'易混字 シツ、ソン、クタケ…，加上片假名的濁音、小字和 ー',ids:()=>K2_IDS},
+  {id:'kwA',date:'2026-11-10',kind:'learn',lesson:'words',title:'片假名詞 A',what:`${KW_A.length} 個詞，只用到第 1 批的字`,ids:()=>KW_A},
+  {id:'rules',date:'2026-11-11',kind:'learn',lesson:'rules',title:'拗音・促音・長音的規則',what:`先讀規則，再看羅馬字寫 ${RULE_IDS.length} 個詞`,ids:()=>RULE_IDS},
+  {id:'kwB',date:'2026-11-11',kind:'learn',lesson:'words',title:'片假名詞 B',what:`${KW_B.length} 個詞，沒有拗音`,ids:()=>KW_B},
+  {id:'hcheck',date:'2026-11-12',kind:'sheet',title:'平假名全檢',what:`看羅馬字寫出清音和濁音 ${H_KANA.length} 個字，找出模糊的`,ids:()=>H_KANA},
+  {id:'kwC',date:'2026-11-12',kind:'learn',lesson:'words',title:'片假名詞 C',what:`${KW_C.length} 個詞，比較長，包含拗音`,ids:()=>KW_C},
+  {id:'hwA',date:'2026-11-12',kind:'learn',lesson:'words',title:'平假名詞 A',what:`${HW.A.length} 個詞，沒有拗音、促音、長音`,ids:()=>HW.A},
+  {id:'hwB',date:'2026-11-13',kind:'learn',lesson:'words',title:'平假名詞 B',what:`${HW.B.length} 個有促音或長音的詞`,ids:()=>HW.B},
+  {id:'hwC',date:'2026-11-13',kind:'learn',lesson:'words',title:'平假名詞 C',what:`${HW.C.length} 個有拗音的詞`,ids:()=>HW.C},
+  {id:'scr',date:'2026-11-13',kind:'scr',title:'拼字練習 20 題',what:'照考卷第③題：打亂的假名加干擾字',ids:()=>shuffle(W.h.slice()).slice(0,10).concat(shuffle(W.k.slice()).slice(0,10))},
+  {id:'mock1',date:'2026-11-14',kind:'mock',title:'模擬考 1',what:'30 題照考卷格式，目標 24 分以上',ids:()=>[]},
+  {id:'mock2',date:'2026-11-15',kind:'mock',title:'模擬考 2（用紙筆）',what:'這次一定用紙寫，目標 27 分以上',ids:()=>[]},
   {id:'final',date:'2026-11-15',kind:'final',title:'考前整理',what:'錯題本全部重寫、看「考前一頁」、寫作業第 95–96 頁',ids:()=>[]}
 ];
 const STAGE=Object.fromEntries(STAGES.map(s=>[s.id,s]));
@@ -1279,7 +1279,7 @@ function renderToday(){
   else if(next) h+=`<p>今天排的都做完了。有空可以先做下一個：</p><ul class="stages">${stageRow(next,t,true)}</ul>`;
   else h+='<p>進度全部完成。考前每天做到期複習和錯題本就好。</p>';
   h+='</article></div>';
-  h+=`<div class="block"><h2>進度表</h2><p class="muted">日期是建議。旅行時照順序往下做就好；落後的會標紅，和當天的一起補完。每天大約 40–50 分鐘。</p><ul class="stages">${STAGES.map(s=>stageRow(s,t,false)).join('')}</ul></div>`;
+  h+=`<div class="block"><h2>進度表</h2><p class="muted">日期是建議。旅行時照順序往下做就好；落後的會標紅，和當天的一起補完。每天大約 60 分鐘。</p><ul class="stages">${STAGES.map(s=>stageRow(s,t,false)).join('')}</ul></div>`;
   if(state.mocks.length) h+=`<div class="block"><h2>模擬考紀錄</h2><ul class="mock-list">${state.mocks.slice().reverse().map(m=>`<li><span>${md(m.d)}</span><span>①${m.p[0]} ②${m.p[1]} ③${m.p[2]}</span><b>${m.s} / 30</b></li>`).join('')}</ul></div>`;
   $('#tab-today').innerHTML=h;
 }
