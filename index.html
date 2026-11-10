@@ -514,6 +514,20 @@ label.btn{cursor:pointer}
 .kc-h{color:var(--ink-2)}
 .kc-ex{font-size:.88rem}
 .kc-ex .kana{font-size:1.1rem}
+/* word-by-word */
+.wl-card{background:var(--sheet);border:1px solid var(--rule);border-radius:16px;padding:20px 18px;display:grid;gap:14px;max-width:620px;margin:0 auto;width:100%}
+.wl-en{font-size:1.35rem}
+.wl-word{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.wl-word .ans{font-size:2.8rem}
+.wl-pr{flex-direction:column;align-items:flex-start;gap:4px}
+.wl-pr .pr.pk{font-size:2rem}
+.cc-row{display:flex;flex-wrap:wrap;gap:8px}
+.cc{display:grid;justify-items:center;gap:2px;min-width:76px;max-width:120px;padding:8px 8px 6px;border:1px solid var(--rule);border-radius:10px;background:var(--paper);color:var(--ink);font:inherit;text-align:center}
+button.cc{cursor:pointer}
+button.cc:hover{border-color:var(--ai)}
+.cc-k{font-family:var(--f-kana);font-weight:600;font-size:1.9rem;line-height:1.1}
+.cc-s{font-size:.78rem;color:var(--ink-2)}
+.cc-r{font-size:.72rem;color:var(--ink-3);line-height:1.3}
 </style>
 </head>
 <body>
@@ -910,8 +924,7 @@ const KW_A=[],kRest=[];
 W.k.forEach(id=>{const ok=[...kCharsOf(ITEMS[id].ans)].every(c=>K1SET.has(c));(ok?KW_A:kRest).push(id);});
 const hasYoon=id=>[...ITEMS[id].ans].some(c=>YOON_SMALL.has(c));
 kRest.sort((a,b)=>(hasYoon(a)-hasYoon(b))||(units(ITEMS[a].ans).length-units(ITEMS[b].ans).length));
-const KW_B=kRest.slice(0,16), KW_C=kRest.slice(16);
-KW_A.forEach(id=>ITEMS[id].batch='A');KW_B.forEach(id=>ITEMS[id].batch='B');KW_C.forEach(id=>ITEMS[id].batch='C');
+const KW1=KW_A, KW2=kRest.slice(0,11), KW3=kRest.slice(11,22), KW4=kRest.slice(22);
 const HW={A:[],B:[],C:[]}; W.h.forEach(id=>HW[ITEMS[id].batch].push(id));
 
 const K1_IDS=K_BATCH1.map(k=>'k:'+k);
@@ -977,16 +990,14 @@ const md=k=>{const d=parseDay(k);return `${d.getMonth()+1}/${d.getDate()}（${WD
 
 /* ================= stages ================= */
 const STAGES=[
-  {id:'k1',date:'2026-11-10',kind:'learn',lesson:'kana',chars:K_BATCH1,title:'片假名第 1 批（23 字）',what:`看平假名寫片假名 23 字，再用這些字改寫 ${K1_CONV.length+K1_READ.length} 個詞`,groups:()=>[K1_IDS,K1_CONV,K1_READ]},
-  {id:'k2',date:'2026-11-10',kind:'learn',lesson:'kana2',chars:K2_CHARS,title:'片假名第 2 批（23 字）',what:`易混字 シツ、ソン、クタケ…，寫 ${K2_IDS.length} 字，再改寫 ${K2_CONV.length+K2_READ.length} 個詞`,groups:()=>[K2_IDS,K2_CONV,K2_READ]},
-  {id:'kwA',date:'2026-11-10',kind:'learn',lesson:'words',title:'片假名詞 A',what:`${KW_A.length} 個詞，先平改片、再看英文寫，每個寫兩次`,groups:()=>[kConv(KW_A),KW_A]},
-  {id:'rules',date:'2026-11-11',kind:'learn',lesson:'rules',title:'拗音・促音・長音的規則',what:`先讀規則，再看羅馬字寫 ${RULE_IDS.length} 個詞`,ids:()=>RULE_IDS},
-  {id:'kwB',date:'2026-11-11',kind:'learn',lesson:'words',title:'片假名詞 B',what:`${KW_B.length} 個詞，沒有拗音；先平改片、再看英文寫`,groups:()=>[kConv(KW_B),KW_B]},
-  {id:'hcheck',date:'2026-11-12',kind:'sheet',title:'平假名全檢',what:`看羅馬字寫出清音和濁音 ${H_KANA.length} 個字，找出模糊的`,ids:()=>H_KANA},
-  {id:'kwC',date:'2026-11-12',kind:'learn',lesson:'words',title:'片假名詞 C',what:`${KW_C.length} 個詞，比較長、有拗音；先平改片、再看英文寫`,groups:()=>[kConv(KW_C),KW_C]},
-  {id:'hwA',date:'2026-11-12',kind:'learn',lesson:'words',title:'平假名詞 A',what:`${HW.A.length} 個詞，沒有拗音、促音、長音；先片改平、再看英文寫`,groups:()=>[hConv(HW.A),HW.A]},
-  {id:'hwB',date:'2026-11-13',kind:'learn',lesson:'words',title:'平假名詞 B',what:`${HW.B.length} 個有促音或長音的詞；先片改平、再看英文寫`,groups:()=>[hConv(HW.B),HW.B]},
-  {id:'hwC',date:'2026-11-13',kind:'learn',lesson:'words',title:'平假名詞 C',what:`${HW.C.length} 個有拗音的詞；先片改平、再看英文寫`,groups:()=>[hConv(HW.C),HW.C]},
+  {id:'kw1',date:'2026-11-10',kind:'wl',title:'片假名詞 1',what:`${KW1.length} 個詞，用到的字最簡單`,words:()=>KW1,groups:()=>[kConv(KW1),KW1]},
+  {id:'kw2',date:'2026-11-10',kind:'wl',title:'片假名詞 2',what:`${KW2.length} 個比較短的詞`,words:()=>KW2,groups:()=>[kConv(KW2),KW2]},
+  {id:'rules',date:'2026-11-11',kind:'learn',lesson:'rules',title:'拗音・促音・長音的規則',what:`讀規則，再看羅馬字寫 ${RULE_IDS.length} 個詞`,ids:()=>RULE_IDS},
+  {id:'kw3',date:'2026-11-11',kind:'wl',title:'片假名詞 3',what:`${KW3.length} 個詞`,words:()=>KW3,groups:()=>[kConv(KW3),KW3]},
+  {id:'kw4',date:'2026-11-11',kind:'wl',title:'片假名詞 4',what:`${KW4.length} 個比較長、有拗音的詞`,words:()=>KW4,groups:()=>[kConv(KW4),KW4]},
+  {id:'hwA',date:'2026-11-12',kind:'wl',title:'平假名詞 A',what:`${HW.A.length} 個沒有拗音、促音、長音的詞`,words:()=>HW.A,groups:()=>[hConv(HW.A),HW.A]},
+  {id:'hwB',date:'2026-11-12',kind:'wl',title:'平假名詞 B',what:`${HW.B.length} 個有促音或長音的詞`,words:()=>HW.B,groups:()=>[hConv(HW.B),HW.B]},
+  {id:'hwC',date:'2026-11-13',kind:'wl',title:'平假名詞 C',what:`${HW.C.length} 個有拗音的詞`,words:()=>HW.C,groups:()=>[hConv(HW.C),HW.C]},
   {id:'scr',date:'2026-11-13',kind:'scr',title:'拼字練習 20 題',what:'照考卷第③題：打亂的假名加干擾字',ids:()=>shuffle(W.h.slice()).slice(0,10).concat(shuffle(W.k.slice()).slice(0,10))},
   {id:'mock1',date:'2026-11-14',kind:'mock',title:'模擬考 1',what:'30 題照考卷格式，目標 24 分以上',ids:()=>[]},
   {id:'mock2',date:'2026-11-15',kind:'mock',title:'模擬考 2（用紙筆）',what:'這次一定用紙寫，目標 27 分以上',ids:()=>[]},
@@ -1307,8 +1318,8 @@ function renderToday(){
 }
 
 /* ================= practice tab ================= */
-const SCOPES=[['hw','平假名詞',()=>W.h],['kw','片假名詞',()=>W.k],['aw','全部詞',()=>ALL_W],['hk2','平改片',()=>CONV_K],['kh2','片改平',()=>CONV_H],['hk','平假名單字',()=>H_KANA],['kk','片假名單字',()=>K_KANA_ALL],['err','錯題',()=>errIds()]];
-function learnedKata(){if(stageDone('k2'))return null;if(stageDone('k1'))return K1SET;return new Set();}
+const SCOPES=[['hw','平假名詞',()=>W.h],['kw','片假名詞',()=>W.k],['aw','全部詞',()=>ALL_W],['hk2','平改片',()=>CONV_K],['kh2','片改平',()=>CONV_H],['err','錯題',()=>errIds()]];
+function learnedKata(){const st=['kw1','kw2','kw3','kw4'];if(st.every(stageDone))return null;const set=new Set();st.filter(stageDone).forEach(id=>STAGE[id].words().forEach(w=>units(ITEMS[w].ans).forEach(c=>set.add(baseKana(c)))));return set;}
 function practicePool(){
   const p=state.prefs; const sc=SCOPES.find(s=>s[0]===p.scope)||SCOPES[0];
   let ids=sc[2]().slice();
@@ -1326,7 +1337,7 @@ function renderPractice(){
     <div class="chips">${SCOPES.map(([id,l,f])=>`<button type="button" class="chip" data-scope="${id}" aria-pressed="${p.scope===id}">${l} ${f().length}</button>`).join('')}</div>
     <div class="seg" role="group" aria-label="題數">${[['10','10 題'],['20','20 題'],['all','全部']].map(([v,l])=>`<button type="button" data-count="${v}" aria-pressed="${p.count===v}">${l}</button>`).join('')}</div>
     <label class="switch"><input type="checkbox" id="p-learned" ${p.learned?'checked':''}> 只出學過的</label>
-    <p class="p-note${n?'':' warn'}">${n?`會出 ${n} 題，錯題和沒寫過的優先。`:p.scope==='err'?'錯題本是空的。':(p.scope==='hk2'||p.scope==='kh2')?'還沒學片假名。先做「片假名第 1 批」，或關掉「只出學過的」。':'這個範圍沒有題目，關掉「只出學過的」試試。'}</p>
+    <p class="p-note${n?'':' warn'}">${n?`會出 ${n} 題，錯題和沒寫過的優先。`:p.scope==='err'?'錯題本是空的。':(p.scope==='hk2'||p.scope==='kh2')?'還沒學片假名詞。先做「片假名詞 1」，或關掉「只出學過的」。':'這個範圍沒有題目，關掉「只出學過的」試試。'}</p>
     <button type="button" class="btn primary" data-act="write" ${n?'':'disabled'}>開始默寫</button></article>
   <article class="card mode-card"><p class="label">考卷第③題</p><h2>拼字</h2><p>看英文，從打亂的假名裡按順序點出這個詞。干擾字專挑形近字和大小字，例如 シ／ツ、ユ／ュ。</p>
     <div class="seg" role="group" aria-label="拼字範圍">${[['h','平假名'],['k','片假名'],['mix','混合']].map(([v,l])=>`<button type="button" data-sscope="${v}" aria-pressed="${p.sscope===v}">${l}</button>`).join('')}</div>
@@ -1535,6 +1546,58 @@ function mockResult(M){
     ${wrong.length?`<h2>①② 寫錯或不確定的</h2><ul class="err-list">${wrong.map(id=>errRowHTML(id,M.r1[id]||M.r2[id])).join('')}</ul>`:''}
     ${M.r3.some(r=>!r.ok)?`<h2>③ 拼錯的</h2><ul class="err-list">${M.r3.filter(r=>!r.ok).map(r=>errRowHTML(r.id,null,r.ans)).join('')}</ul>`:''}</div>`;
   S={type:'done'}; openSession(); $('#session').innerHTML=h; window.scrollTo(0,0);
+}
+
+/* ================= session: word by word (逐詞背) ================= */
+function charCell(c,script){
+  let sub='',src='',open='';
+  if(c==='ー'){sub='長音';src='拉長前一個音';}
+  else if(SMALL_BIG[c]){sub='小 '+SMALL_BIG[c];src=SOKU.has(c)?'促音，停一拍':'和前一個字合成一拍';}
+  else{
+    const p=plain(c), mark=isDaku(c)?'゛':isHandaku(c)?'゜':'';
+    const id=(script==='k'?'k:':'h:')+c; const r=ITEMS[id]?ITEMS[id].r:'';
+    if(ITEMS[id]) open=id;
+    sub=(script==='k'?toHira(c):toKata(c))+' '+r;
+    if(script==='k'&&KINFO[p]){const d=KINFO[p];const m=d[1].match(/「(.+?)」/);src=(mark?p+'＋'+mark+'・':'')+d[0]+' → '+(m?m[1]:d[1]);}
+    else if(script==='h'&&INFO[p]) src=(mark?p+'＋'+mark+'・':'')+'字源 '+INFO[p][1];
+  }
+  return `<${open?`button type="button" data-open="${open}"`:'div'} class="cc"><span class="cc-k">${esc(c)}</span><span class="cc-s">${esc(sub)}</span>${src?`<span class="cc-r">${esc(src)}</span>`:''}</${open?'button':'div'}>`;
+}
+function startWordLearn(s){
+  S={type:'wl',s,queue:s.words().map(id=>({id,phase:'see'})),i:0,done:0,total:s.words().length};
+  openSession(); renderWL();
+}
+function renderWL(){
+  const q=S.queue[S.i], it=ITEMS[q.id], other=it.script==='k'?toHira(it.ans):toKata(it.ans), tgt=it.script==='k'?'片假名':'平假名';
+  let h=topBar(S.s.title,`第 ${Math.min(S.done+1,S.total)} / ${S.total} 個詞・${q.phase==='see'?'先背':q.phase==='test'?'蓋起來寫':'對答案'}`,S.done/S.total);
+  h+='<div class="wl-card">';
+  if(q.phase==='see'){
+    h+=`<p class="w-en wl-en">${esc(it.en)}</p>
+      <div class="wl-word"><span class="ans">${esc(it.ans)}</span><button type="button" class="icon-btn" data-speak="${esc(it.ans)}" aria-label="播放發音">${ICON_SPEAK}</button></div>
+      <p class="muted"><span class="romaji">${esc(it.r)}</span>　${esc(it.zh)}　・${it.script==='k'?'平假名':'片假名'}逐字：<span class="kana">${esc(other)}</span></p>
+      <div class="cc-row">${units(it.ans).map(c=>charCell(c,it.script)).join('')}</div>
+      ${checksHTML(it)}
+      <p class="s-tip">拆開看每個字（點字可以看詳細），然後<b>在紙上寫 3 遍，邊寫邊唸</b>。記住了就蓋起來寫。</p>
+      <div class="row-btns"><button type="button" class="btn primary" data-act="wl-cover">記住了，蓋起來寫</button></div>`;
+  }else{
+    h+=`<p class="q-ask">不看答案，在紙上寫成${tgt}</p><div class="s-pr wl-pr"><span class="pr pk">${esc(other)}</span><span class="w-en">${esc(it.en)}</span></div>`;
+    if(q.phase==='test') h+=`<div class="row-btns"><button type="button" class="btn primary" data-act="wl-reveal">寫好了，對答案</button></div>`;
+    else h+=`<div class="wl-word"><span class="ans">${esc(it.ans)}</span><button type="button" class="icon-btn" data-speak="${esc(it.ans)}" aria-label="播放發音">${ICON_SPEAK}</button></div>${checksHTML(it)}
+      <p class="muted" style="font-size:.86rem">這一步是背，不記進度。這一批背完後的改寫測驗才算。寫錯的詞，過兩個詞後會再出現一次。</p>
+      <div class="grades">${['o','m','x'].map(k=>`<button type="button" class="gbtn ${k}" data-act="wl-grade" data-g="${k}">${GL[k]}</button>`).join('')}</div>`;
+  }
+  h+='</div>';
+  $('#session').innerHTML=h; window.scrollTo(0,0);
+}
+function wlGrade(g){
+  const q=S.queue[S.i];
+  if(g==='x'){S.queue.splice(Math.min(S.i+3,S.queue.length),0,{id:q.id,phase:'see',again:true});}
+  else S.done++;
+  S.i++;
+  if(S.i<S.queue.length){renderWL();return;}
+  const s=S.s;
+  toast('這一批背完了，接下來是改寫測驗');
+  startSheet({title:s.title+'・改寫測驗',groups:s.groups().map(g=>shuffle(g.slice())),relearn:true,stage:s.id});
 }
 
 /* ================= session: study (學) ================= */
@@ -1757,7 +1820,8 @@ function goTab(id){closeSession();showTab(id);window.scrollTo(0,0);}
 
 function startStage(id){
   const s=STAGE[id]; if(!s) return;
-  if(s.kind==='learn') renderStudy(s);
+  if(s.kind==='wl') startWordLearn(s);
+  else if(s.kind==='learn') renderStudy(s);
   else if(s.kind==='sheet') startSheet({title:s.title,ids:shuffle(s.ids().slice()),relearn:true,stage:id});
   else if(s.kind==='scr') startScramble({title:s.title,ids:s.ids(),feedback:true,stage:id});
   else if(s.kind==='mock') startMock(id);
@@ -1820,6 +1884,9 @@ document.addEventListener('click',e=>{
     case 'scrok': scrSubmit(); break;
     case 'scrnext': scrNext(); break;
     case 'studygo':{const s=S.s;startSheet({title:s.title,groups:s.groups?s.groups().map(g=>shuffle(g.slice())):[shuffle(s.ids().slice())],relearn:true,stage:s.id});break;}
+    case 'wl-cover': S.queue[S.i].phase='test'; renderWL(); break;
+    case 'wl-reveal': S.queue[S.i].phase='check'; renderWL(); break;
+    case 'wl-grade': wlGrade(d.g); break;
     case 'finalck':{const st=state.stages.final||(state.stages.final={});st.c=st.c||{};st.c[d.k]=!st.c[d.k];if(st.c.err&&st.c.sheet&&st.c.hw){st.done=true;st.at=today();}persist();renderFinal();break;}
   }
 });
