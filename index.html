@@ -536,6 +536,15 @@ button.cc:hover{border-color:var(--ai)}
 .cc{position:relative}
 .cc.new{border-color:var(--shu);border-width:2px;background:var(--shu-soft)}
 .cc-new{position:absolute;top:-9px;right:-6px;font-size:.66rem;font-weight:700;background:var(--shu);color:var(--sheet);border-radius:99px;padding:1px 6px}
+.recipes{list-style:none;padding:0;margin:6px 0 0;display:grid;gap:4px;font-size:.92rem}
+.recipes .kana{font-size:1.25rem;color:var(--shu)}
+.fam{list-style:none;padding:0;margin:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,230px),1fr));gap:8px}
+.fam li{display:grid;grid-template-columns:auto minmax(0,1fr);gap:10px;align-items:center;background:var(--sheet);border:1px solid var(--rule);border-radius:12px;padding:8px 10px}
+.fam-k{width:54px;height:62px;display:grid;place-items:center;cursor:pointer;padding:0 0 10px}
+.fam-k .kana{font-size:1.9rem;line-height:1}
+.fam-k .ro{position:absolute;bottom:2px;left:0;right:0;text-align:center;font-family:var(--f-mono);font-size:.68rem;color:var(--ink-3)}
+.fam li p{font-size:.88rem}
+.fam-from{font-size:1.2rem;color:var(--shu)}
 </style>
 </head>
 <body>
@@ -826,6 +835,29 @@ const KINFO={
 'ヲ':['乎','整個字的簡化','兩橫，再一撇。只當助詞，Test1 用不到。','字源不同：を 來自「遠」。'],
 'ン':['尓','字源有不同說法','左上一點，再一筆由左下往右上挑。','和 ん 一樣只讀 n。']
 };
+// 字形積木：每個片假名 = 基本形 ＋ 一兩筆（用中文筆畫說）
+const KFAM=[
+  {name:'フ 家族',desc:'從一筆「橫折撇」長出來',items:[
+    ['フ','','基本形：一筆橫折撇，頭是平的'],['ワ','フ','左邊加一短豎'],['ウ','ワ','頭上再加一點'],
+    ['ラ','フ','頭上加一短橫'],['ヲ','フ','中間多一橫（Test1 用不到）'],['ス','フ','右下加一點'],['ヌ','フ','加一筆斜點，從中間穿過去'],
+    ['マ','フ','裡面加一點，往右下'],['ア','フ','裡面加一短撇，往左下'],['ク','フ','左上先加一短撇'],['タ','ク','中間再加一點']]},
+  {name:'點撇家族',desc:'由點、撇、挑組成，重點看最後一筆的方向',items:[
+    ['ノ','','基本形：一撇'],['ハ','ノ','右邊加一點（八）'],['メ','ノ','加一點交叉（×）'],['ナ','ノ','先寫一條橫，再撇（像 十）'],
+    ['イ','ノ','撇＋一豎（亻）'],['ケ','ノ','撇＋一條平橫，再從橫的中間往左下撇'],
+    ['ソ','','一點＋一長撇（由右上往左下）'],['ツ','ソ','點變兩個，都在上面'],
+    ['ン','','一點＋一挑（由左下往右上）'],['シ','ン','點變兩個，排在左邊'],
+    ['レ','','一筆：豎＋往右上挑'],['ル','レ','左邊加一撇（儿）'],['ム','','撇折＋一點（厶）'],['ミ','','三條斜點（三）']]},
+  {name:'橫豎家族',desc:'橫、豎和方框，大多就是一個漢字',items:[
+    ['ニ','','兩橫（二）'],['エ','ニ','中間加一豎（工）'],['キ','ニ','加一豎穿過兩橫'],['テ','ニ','從下面那橫的中間往左下撇'],
+    ['モ','ニ','加一豎彎（乚）穿過兩橫'],['チ','テ','頂上那橫換成撇（千）'],
+    ['ロ','','口'],['コ','ロ','拿掉左邊那豎，開口朝左'],['ヨ','コ','中間多一橫'],['ユ','コ','底下那橫往右穿出去'],
+    ['ト','','一豎＋右邊一點（卜）'],['ヒ','','一橫＋一豎彎（匕）'],['セ','','一橫往下折＋一豎彎（世）'],
+    ['カ','','力'],['オ','','才：一橫、一豎鉤、一撇'],['ヤ','','一筆橫折鉤＋一撇穿過'],['サ','','一橫＋兩豎，右豎往左下彎'],
+    ['ネ','','礻（示字旁）'],['ホ','','木：十＋下面兩點'],['ヘ','','一筆 ^'],['リ','','刂：兩豎，右邊長']]}
+];
+const KREC={}; KFAM.forEach(f=>f.items.forEach(([k,from,add])=>{KREC[k]={from,add,fam:f.name};}));
+const recipe=k=>{const r=KREC[k];return r?(r.from?`${r.from}＋${r.add}`:r.add):'';};
+function recipeChain(k){const out=[];let c=k,guard=0;while(c&&KREC[c]&&guard++<6){out.unshift(c);c=KREC[c].from;}return out;}
 const K_BATCH1='カキセモヤヘリコニフウエロハトタチミヒイオナネ'.split('');
 const KGROUPS=[
   {id:'k-shitsu',ks:['シ','ツ'],key:'看最後一筆：往右上挑是 シ，往左下撇是 ツ',notes:{'シ':'兩點橫著排在左邊，第三筆由左下往右上挑。','ツ':'三筆的頭都在上面，最後一筆由右上往左下長撇。'}},
@@ -1022,7 +1054,7 @@ function normalize(s){
     prefs:Object.assign(b.prefs,isObj(s.prefs)?s.prefs:{}),updatedAt:+s.updatedAt||0};
 }
 let state=normalize(loadJSON(LS_KEY));
-const ui=Object.assign({tab:'today',ref:'k',romaji:true,errView:'list'},loadJSON(UI_KEY)||{});
+const ui=Object.assign({tab:'today',ref:'blocks',romaji:true,errView:'list'},loadJSON(UI_KEY)||{});
 function saveUI(){saveJSON(UI_KEY,ui);}
 
 const IV=[1,1,2,3,4];
@@ -1564,7 +1596,7 @@ function charCell(c,script,isNew){
     const id=(script==='k'?'k:':'h:')+c; const r=ITEMS[id]?ITEMS[id].r:'';
     if(ITEMS[id]) open=id;
     sub=(script==='k'?toHira(c):toKata(c))+' '+r;
-    if(script==='k'&&KINFO[p]){const d=KINFO[p];const m=d[1].match(/「(.+?)」/);src=(mark?p+'＋'+mark+'・':'')+d[0]+' → '+(m?m[1]:d[1]);}
+    if(script==='k'&&KREC[p]){src=(mark?p+'＋'+mark+'・':'')+recipe(p);}
     else if(script==='h'&&INFO[p]) src=(mark?p+'＋'+mark+'・':'')+'字源 '+INFO[p][1];
   }
   return `<${open?`button type="button" data-open="${open}"`:'div'} class="cc${isNew?' new':''}">${isNew?'<span class="cc-new">新字</span>':''}<span class="cc-k">${esc(c)}</span><span class="cc-s">${esc(sub)}</span>${src?`<span class="cc-r">${esc(src)}</span>`:''}</${open?'button':'div'}>`;
@@ -1583,7 +1615,7 @@ function renderWL(){
   const q=S.queue[S.i], it=ITEMS[q.id], other=it.script==='k'?toHira(it.ans):toKata(it.ans), tgt=it.script==='k'?'片假名':'平假名';
   const isNewChar=c=>it.script==='k'&&c!=='ー'&&!S.known.has(baseKana(c));
   const newChars=[...new Set(units(it.ans).filter(isNewChar).map(baseKana))];
-  const newNote=it.script!=='k'?'':newChars.length?`<p class="new-note">這個詞只有 <b>${newChars.length}</b> 個新字要記：<span class="kana">${newChars.join('、')}</span>。其他的字都學過了。</p>`:'<p class="new-note">這個詞的字都學過了，照讀音拼出來就好。</p>';
+  const newNote=it.script!=='k'?'':newChars.length?`<div class="new-note"><p>這個詞只有 <b>${newChars.length}</b> 個新字要記，用積木拼：</p><ul class="recipes">${newChars.map(c=>`<li><span class="kana">${c}</span>＝${esc(recipe(c))}${recipeChain(c).length>2?`（${recipeChain(c).map(x=>`<span class="kana">${x}</span>`).join(' → ')}）`:''}</li>`).join('')}</ul></div>`:'<p class="new-note">這個詞的字都學過了，照讀音拼出來就好。</p>';
   let h=topBar(S.s.title,`第 ${Math.min(S.done+1,S.total)} / ${S.total} 個詞・${q.phase==='see'?'先背':q.phase==='test'?'蓋起來寫':'對答案'}`,S.done/S.total);
   h+='<div class="wl-card">';
   if(q.phase==='see'){
@@ -1594,7 +1626,7 @@ function renderWL(){
       ${newNote}
       <div class="cc-row">${units(it.ans).map(c=>charCell(c,it.script,isNewChar(c))).join('')}</div>
       ${checksHTML(it)}
-      <p class="s-tip">先跟著上面那行從讀音推出拼法，只要專心記<b>紅框的新字</b>（點字可以看字源）。然後<b>在紙上寫 2 遍，邊寫邊唸</b>，記住了就蓋起來寫。</p>
+      <p class="s-tip">先跟著上面那行從讀音推出拼法，只要專心記<b>紅框的新字</b>：邊寫邊唸它的積木，例如「フ 加一點是 ス」。然後<b>在紙上寫 2 遍，邊寫邊唸</b>，記住了就蓋起來寫。</p>
       <div class="row-btns"><button type="button" class="btn primary" data-act="wl-cover">記住了，蓋起來寫</button></div>`;
   }else{
     h+=`<p class="q-ask">不看答案，在紙上寫成${tgt}</p><div class="s-pr wl-pr"><span class="pr pk">${esc(other)}</span><span class="w-en">${esc(it.en)}</span></div>`;
@@ -1774,8 +1806,9 @@ function chartBlocks(script){
   return `<div class="chart-block"><h3>清音</h3>${a}<p class="chart-note"><span class="lg ok">穩了</span><span class="lg mid">練習中</span><span class="lg weak">錯題</span><span>點字看${script==='k'?'字源部件':'字源'}和記法</span></p></div><div class="chart-block"><h3>濁音・半濁音</h3>${b}</div><div class="chart-block"><h3>拗音</h3>${c}</div>`;
 }
 function renderChartTab(){
-  let h=`<div class="toolbar"><div class="seg" role="group" aria-label="字表">${[['h','平假名'],['k','片假名'],['cf','易混字'],['rules','規則']].map(([v,l])=>`<button type="button" data-ref="${v}" aria-pressed="${ui.ref===v}">${l}</button>`).join('')}</div>${ui.ref==='h'||ui.ref==='k'?`<label class="switch"><input type="checkbox" id="show-romaji" ${ui.romaji?'checked':''}> 顯示羅馬字</label>`:''}</div>`;
+  let h=`<div class="toolbar"><div class="seg" role="group" aria-label="字表">${[['blocks','片假名積木'],['k','片假名'],['h','平假名'],['cf','易混字'],['rules','規則']].map(([v,l])=>`<button type="button" data-ref="${v}" aria-pressed="${ui.ref===v}">${l}</button>`).join('')}</div>${ui.ref==='h'||ui.ref==='k'?`<label class="switch"><input type="checkbox" id="show-romaji" ${ui.romaji?'checked':''}> 顯示羅馬字</label>`:''}</div>`;
   if(ui.ref==='h'||ui.ref==='k') h+=chartBlocks(ui.ref);
+  else if(ui.ref==='blocks') h+=`<p class="muted">片假名每個字只有 1–4 筆，筆畫就是中文的橫、豎、撇、點、橫折、挑。先記每一家的基本形，其他字都是「基本形加一筆」。寫的時候照中文的筆順就好。</p>`+KFAM.map(f=>`<div class="block"><h2>${esc(f.name)}</h2><p class="muted">${esc(f.desc)}</p><ul class="fam">${f.items.map(([k,from,add])=>`<li><button type="button" class="fam-k sq" data-open="k:${k}" aria-label="${k}"><span class="kana">${k}</span><span class="ro">${esc(ITEMS['k:'+k].r)}</span></button><p>${from?`<span class="kana fam-from">${from}</span>＋`:''}${esc(add)}</p></li>`).join('')}</ul></div>`).join('');
   else if(ui.ref==='cf') h+=`<div class="block"><h2>片假名易混字</h2><div class="groups">${KGROUPS.map(g=>groupCardHTML(g,'k')).join('')}</div></div><div class="block"><h2>平假名易混字</h2><div class="groups">${GROUPS.filter(g=>g.id!=='bapa').map(g=>groupCardHTML(g,'h')).join('')}</div></div>`;
   else h+=rulesLessonHTML()+kataRulesHTML();
   $('#tab-chart').innerHTML=h;
@@ -1803,7 +1836,9 @@ function renderDetail(){
     origin=`<div class="d-origin"><div class="d-pair"><span class="kana">${b}</span><span class="arrow">＋${isDaku(k)?'゛':'゜'}</span><span class="kana">${k}</span></div><div><p class="label">怎麼來的</p><p>${b}（${esc(ITEMS[(it.script==='k'?'k:':'h:')+b].r)}）加上${isDaku(k)?'濁點 ゛':'半濁點 ゜'}，讀 ${esc(it.r)}。</p></div></div>`;
   }else if(it.script==='k'){
     const d=KINFO[k];
-    origin=`<div class="d-origin"><div class="d-pair"><span class="han">${esc(d[0])}</span><span class="arrow">→</span><span class="kana">${k}</span></div><div><p class="label">取「${esc(d[0])}」${esc(d[1])}</p><p>${esc(d[2])}</p><p class="muted" style="font-size:.86rem">${esc(d[3])}（平假名 <span class="kana">${toHira(k)}</span>）</p></div></div>`;
+    const ch=recipeChain(k);
+    origin=`<div class="d-origin"><div class="d-pair">${ch.map((x,i)=>`${i?'<span class="arrow">→</span>':''}<span class="kana">${x}</span>`).join('')}</div><div><p class="label">字形積木・${esc(KREC[k]?KREC[k].fam:'')}</p><p>${esc(recipe(k))}</p></div></div>
+    <div class="d-origin"><div class="d-pair"><span class="han">${esc(d[0])}</span><span class="arrow">→</span><span class="kana">${k}</span></div><div><p class="label">取「${esc(d[0])}」${esc(d[1])}</p><p>${esc(d[2])}</p><p class="muted" style="font-size:.86rem">${esc(d[3])}（平假名 <span class="kana">${toHira(k)}</span>）</p></div></div>`;
   }else{
     const d=INFO[k];
     origin=`<div class="d-origin"><div class="d-pair"><span class="han">${esc(d[1])}</span><span class="arrow">→</span><span class="kana">${k}</span></div><div><p class="label">字源・字形記法</p><p>${esc(d[3])}</p><p class="muted" style="font-size:.86rem">片假名 <span class="kana">${toKata(k)}</span></p></div></div>`;
