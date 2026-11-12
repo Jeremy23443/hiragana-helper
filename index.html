@@ -528,6 +528,14 @@ button.cc:hover{border-color:var(--ai)}
 .cc-k{font-family:var(--f-kana);font-weight:600;font-size:1.9rem;line-height:1.1}
 .cc-s{font-size:.78rem;color:var(--ink-2)}
 .cc-r{font-size:.72rem;color:var(--ink-3);line-height:1.3}
+.pipe{font-size:.95rem;background:var(--ai-soft);border-radius:10px;padding:8px 12px}
+.pipe .kana{font-size:1.2rem}
+.new-note{font-size:.92rem}
+.new-note b{color:var(--shu);font-family:var(--f-mono)}
+.new-note .kana{font-size:1.2rem;color:var(--shu)}
+.cc{position:relative}
+.cc.new{border-color:var(--shu);border-width:2px;background:var(--shu-soft)}
+.cc-new{position:absolute;top:-9px;right:-6px;font-size:.66rem;font-weight:700;background:var(--shu);color:var(--sheet);border-radius:99px;padding:1px 6px}
 </style>
 </head>
 <body>
@@ -991,14 +999,12 @@ const md=k=>{const d=parseDay(k);return `${d.getMonth()+1}/${d.getDate()}（${WD
 /* ================= stages ================= */
 const STAGES=[
   {id:'kw1',date:'2026-11-10',kind:'wl',title:'片假名詞 1',what:`${KW1.length} 個詞，用到的字最簡單`,words:()=>KW1,groups:()=>[kConv(KW1),KW1]},
-  {id:'kw2',date:'2026-11-10',kind:'wl',title:'片假名詞 2',what:`${KW2.length} 個比較短的詞`,words:()=>KW2,groups:()=>[kConv(KW2),KW2]},
-  {id:'rules',date:'2026-11-11',kind:'learn',lesson:'rules',title:'拗音・促音・長音的規則',what:`讀規則，再看羅馬字寫 ${RULE_IDS.length} 個詞`,ids:()=>RULE_IDS},
-  {id:'kw3',date:'2026-11-11',kind:'wl',title:'片假名詞 3',what:`${KW3.length} 個詞`,words:()=>KW3,groups:()=>[kConv(KW3),KW3]},
-  {id:'kw4',date:'2026-11-11',kind:'wl',title:'片假名詞 4',what:`${KW4.length} 個比較長、有拗音的詞`,words:()=>KW4,groups:()=>[kConv(KW4),KW4]},
-  {id:'hwA',date:'2026-11-12',kind:'wl',title:'平假名詞 A',what:`${HW.A.length} 個沒有拗音、促音、長音的詞`,words:()=>HW.A,groups:()=>[hConv(HW.A),HW.A]},
-  {id:'hwB',date:'2026-11-12',kind:'wl',title:'平假名詞 B',what:`${HW.B.length} 個有促音或長音的詞`,words:()=>HW.B,groups:()=>[hConv(HW.B),HW.B]},
-  {id:'hwC',date:'2026-11-13',kind:'wl',title:'平假名詞 C',what:`${HW.C.length} 個有拗音的詞`,words:()=>HW.C,groups:()=>[hConv(HW.C),HW.C]},
-  {id:'scr',date:'2026-11-13',kind:'scr',title:'拼字練習 20 題',what:'照考卷第③題：打亂的假名加干擾字',ids:()=>shuffle(W.h.slice()).slice(0,10).concat(shuffle(W.k.slice()).slice(0,10))},
+  {id:'kw2',date:'2026-11-12',kind:'wl',title:'片假名詞 2',what:`${KW2.length} 個比較短的詞`,words:()=>KW2,groups:()=>[kConv(KW2),KW2]},
+  {id:'kw3',date:'2026-11-12',kind:'wl',title:'片假名詞 3',what:`${KW3.length} 個詞`,words:()=>KW3,groups:()=>[kConv(KW3),KW3]},
+  {id:'kw4',date:'2026-11-13',kind:'wl',title:'片假名詞 4',what:`${KW4.length} 個比較長、有拗音的詞`,words:()=>KW4,groups:()=>[kConv(KW4),KW4]},
+  {id:'hwA',date:'2026-11-13',kind:'wl',title:'平假名詞 A',what:`${HW.A.length} 個沒有拗音、促音、長音的詞`,words:()=>HW.A,groups:()=>[hConv(HW.A),HW.A]},
+  {id:'hwB',date:'2026-11-14',kind:'wl',title:'平假名詞 B',what:`${HW.B.length} 個有促音或長音的詞`,words:()=>HW.B,groups:()=>[hConv(HW.B),HW.B]},
+  {id:'hwC',date:'2026-11-14',kind:'wl',title:'平假名詞 C',what:`${HW.C.length} 個有拗音的詞`,words:()=>HW.C,groups:()=>[hConv(HW.C),HW.C]},
   {id:'mock1',date:'2026-11-14',kind:'mock',title:'模擬考 1',what:'30 題照考卷格式，目標 24 分以上',ids:()=>[]},
   {id:'mock2',date:'2026-11-15',kind:'mock',title:'模擬考 2（用紙筆）',what:'這次一定用紙寫，目標 27 分以上',ids:()=>[]},
   {id:'final',date:'2026-11-15',kind:'final',title:'考前整理',what:'錯題本全部重寫、看「考前一頁」、寫作業第 95–96 頁',ids:()=>[]}
@@ -1312,7 +1318,7 @@ function renderToday(){
   else if(next) h+=`<p>今天排的都做完了。有空可以先做下一個：</p><ul class="stages">${stageRow(next,t,true)}</ul>`;
   else h+='<p>進度全部完成。考前每天做到期複習和錯題本就好。</p>';
   h+='</article></div>';
-  h+=`<div class="block"><h2>進度表</h2><p class="muted">日期是建議。旅行時照順序往下做就好；落後的會標紅，和當天的一起補完。每天大約 60 分鐘。</p><ul class="stages">${STAGES.map(s=>stageRow(s,t,false)).join('')}</ul></div>`;
+  h+=`<div class="block"><h2>進度表</h2><p class="muted">日期是建議。旅行時照順序往下做就好；落後的會標紅，和當天的一起補完。剩下幾天每天大約 60–90 分鐘。</p><ul class="stages">${STAGES.map(s=>stageRow(s,t,false)).join('')}</ul></div>`;
   if(state.mocks.length) h+=`<div class="block"><h2>模擬考紀錄</h2><ul class="mock-list">${state.mocks.slice().reverse().map(m=>`<li><span>${md(m.d)}</span><span>①${m.p[0]} ②${m.p[1]} ③${m.p[2]}</span><b>${m.s} / 30</b></li>`).join('')}</ul></div>`;
   $('#tab-today').innerHTML=h;
 }
@@ -1549,7 +1555,7 @@ function mockResult(M){
 }
 
 /* ================= session: word by word (逐詞背) ================= */
-function charCell(c,script){
+function charCell(c,script,isNew){
   let sub='',src='',open='';
   if(c==='ー'){sub='長音';src='拉長前一個音';}
   else if(SMALL_BIG[c]){sub='小 '+SMALL_BIG[c];src=SOKU.has(c)?'促音，停一拍':'和前一個字合成一拍';}
@@ -1561,23 +1567,34 @@ function charCell(c,script){
     if(script==='k'&&KINFO[p]){const d=KINFO[p];const m=d[1].match(/「(.+?)」/);src=(mark?p+'＋'+mark+'・':'')+d[0]+' → '+(m?m[1]:d[1]);}
     else if(script==='h'&&INFO[p]) src=(mark?p+'＋'+mark+'・':'')+'字源 '+INFO[p][1];
   }
-  return `<${open?`button type="button" data-open="${open}"`:'div'} class="cc"><span class="cc-k">${esc(c)}</span><span class="cc-s">${esc(sub)}</span>${src?`<span class="cc-r">${esc(src)}</span>`:''}</${open?'button':'div'}>`;
+  return `<${open?`button type="button" data-open="${open}"`:'div'} class="cc${isNew?' new':''}">${isNew?'<span class="cc-new">新字</span>':''}<span class="cc-k">${esc(c)}</span><span class="cc-s">${esc(sub)}</span>${src?`<span class="cc-r">${esc(src)}</span>`:''}</${open?'button':'div'}>`;
+}
+function beats(w){const out=[];units(w).forEach(c=>{if(YOON_SMALL.has(c)&&out.length)out[out.length-1]+=c;else out.push(c);});return out;}
+function knownKataBefore(stageId){
+  const set=new Set();
+  for(const st of STAGES){if(st.id===stageId)break;if(st.kind==='wl'&&st.words().some(id=>ITEMS[id].script==='k'))st.words().forEach(w=>units(ITEMS[w].ans).forEach(c=>{if(c!=='ー')set.add(baseKana(c));}));}
+  return set;
 }
 function startWordLearn(s){
-  S={type:'wl',s,queue:s.words().map(id=>({id,phase:'see'})),i:0,done:0,total:s.words().length};
+  S={type:'wl',s,queue:s.words().map(id=>({id,phase:'see'})),i:0,done:0,total:s.words().length,known:knownKataBefore(s.id)};
   openSession(); renderWL();
 }
 function renderWL(){
   const q=S.queue[S.i], it=ITEMS[q.id], other=it.script==='k'?toHira(it.ans):toKata(it.ans), tgt=it.script==='k'?'片假名':'平假名';
+  const isNewChar=c=>it.script==='k'&&c!=='ー'&&!S.known.has(baseKana(c));
+  const newChars=[...new Set(units(it.ans).filter(isNewChar).map(baseKana))];
+  const newNote=it.script!=='k'?'':newChars.length?`<p class="new-note">這個詞只有 <b>${newChars.length}</b> 個新字要記：<span class="kana">${newChars.join('、')}</span>。其他的字都學過了。</p>`:'<p class="new-note">這個詞的字都學過了，照讀音拼出來就好。</p>';
   let h=topBar(S.s.title,`第 ${Math.min(S.done+1,S.total)} / ${S.total} 個詞・${q.phase==='see'?'先背':q.phase==='test'?'蓋起來寫':'對答案'}`,S.done/S.total);
   h+='<div class="wl-card">';
   if(q.phase==='see'){
     h+=`<p class="w-en wl-en">${esc(it.en)}</p>
       <div class="wl-word"><span class="ans">${esc(it.ans)}</span><button type="button" class="icon-btn" data-speak="${esc(it.ans)}" aria-label="播放發音">${ICON_SPEAK}</button></div>
       <p class="muted"><span class="romaji">${esc(it.r)}</span>　${esc(it.zh)}　・${it.script==='k'?'平假名':'片假名'}逐字：<span class="kana">${esc(other)}</span></p>
-      <div class="cc-row">${units(it.ans).map(c=>charCell(c,it.script)).join('')}</div>
+      ${it.script==='k'?`<p class="pipe"><b>${esc(it.en)}</b> → 日式念法 <span class="kana">${beats(toHira(it.ans)).join('・')}</span>（${beats(it.ans).length} 拍）→ <span class="kana">${beats(it.ans).join('・')}</span></p>`:`<p class="pipe">拆成拍：<span class="kana">${beats(it.ans).join('・')}</span>（${beats(it.ans).length} 拍）</p>`}
+      ${newNote}
+      <div class="cc-row">${units(it.ans).map(c=>charCell(c,it.script,isNewChar(c))).join('')}</div>
       ${checksHTML(it)}
-      <p class="s-tip">拆開看每個字（點字可以看詳細），然後<b>在紙上寫 3 遍，邊寫邊唸</b>。記住了就蓋起來寫。</p>
+      <p class="s-tip">先跟著上面那行從讀音推出拼法，只要專心記<b>紅框的新字</b>（點字可以看字源）。然後<b>在紙上寫 2 遍，邊寫邊唸</b>，記住了就蓋起來寫。</p>
       <div class="row-btns"><button type="button" class="btn primary" data-act="wl-cover">記住了，蓋起來寫</button></div>`;
   }else{
     h+=`<p class="q-ask">不看答案，在紙上寫成${tgt}</p><div class="s-pr wl-pr"><span class="pr pk">${esc(other)}</span><span class="w-en">${esc(it.en)}</span></div>`;
@@ -1592,7 +1609,7 @@ function renderWL(){
 function wlGrade(g){
   const q=S.queue[S.i];
   if(g==='x'){S.queue.splice(Math.min(S.i+3,S.queue.length),0,{id:q.id,phase:'see',again:true});}
-  else S.done++;
+  else{S.done++;units(ITEMS[q.id].ans).forEach(c=>{if(c!=='ー')S.known.add(baseKana(c));});}
   S.i++;
   if(S.i<S.queue.length){renderWL();return;}
   const s=S.s;
